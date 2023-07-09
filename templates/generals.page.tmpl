@@ -1,0 +1,58 @@
+{{template "base" .}}
+
+{{define "content"}}
+
+
+    <div class="container">
+      <div class="row"> 
+        <div class="col">
+          <img src="/static/images/generals-quarters.png" class="img-fluid img-thumbnail rounded mx-auto d-block room-image">
+        </div>
+      </div>
+    </div>
+
+
+    <div class="container">
+
+      <div class="row">
+        <div class="col">
+          <h1 class="text-center mt-3">Welcome to the General's Quarters</h1> 
+          <p>Your home away from home here to provide comfort and a sense of community, this will be a vacation to remember! Set on the sparkling waters of The Atlantic Ocean you can enjoy the beautiful sights and take in the soothing sounds of the ocean while enjoying a fresh cup of coffee on our terrace overlooking the gulf. </p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col text-center">
+                  <p>If you like the sound of those offerings,please navigate to the "Book Now" page or simply click the button below to go there automatically</p>
+                  <a href="#!" id="check-availability-btn" class="btn btn-success">Check Availability</a>
+      </div>
+    </div>
+
+{{end}}
+
+
+{{define "js"}}
+
+  <script> 
+    document.getElementById('check-availability-btn').addEventListener('click',  function() {
+      let html = `
+        <form id="check-availability-form" action="" method="post" novalidate class="needs-validation">
+          <div class="row">
+            <div class="col">
+              <div class="row" id="reservation-dates-modal">
+                <div class="col">
+                  <input required class="form-control" type="text name="start" id="start" placeholder="Arrival Date">
+                </div>
+                <div class="col">
+                  <input required class="form-control" type="text name="end" id="end" placeholder="Departure Date">
+                </div>
+              </div>
+            </div>
+          </div>    
+        </form>
+      `;
+      attention.custom({msg: html, title: "Choose your booking dates"});
+  })
+  </script>
+
+{{end}}

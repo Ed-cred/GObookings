@@ -1,0 +1,54 @@
+{{template "base" .}}
+
+{{define "content"}}
+
+<div class="container">
+    
+          <div class="row">
+            <div class="col">
+              <h1 class="text-center mt-5">Input credentials for reservation</h1> 
+            </div>
+          </div>
+          
+
+          
+          <form action="" method="get" class ="needs-validation" novalidate>
+            <div class="row">
+              <div class="col-md-2"></div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="first-name" class="form-label">First Name</label>
+                  <input type="text" class="form-control" id="first-name" name="first-name" required autocomplete="off" >
+                </div>
+              </div>
+              <div class="col-md-4">  
+                <div class="mb-3">
+                  <label for="last-name" class="form-label" req>Last Name</label>
+                  <input type="text" class="form-control" id="last-name" name="last-name" required autocomplete="off">
+                </div>
+              </div>
+              
+
+            </div>
+            <div class="row">
+              <div class="col-md-2"></div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="email" class="form-label">Email</label>
+                  <input type="email" class="form-control" id="email" name="email" required placeholder="name@example.com" autocomplete="off" >
+                </div>
+                <div class="col-12">
+                <button type="submit" class="btn btn-primary">Make reservation</button>
+              </div>
+              </div>
+              <div class="col-md-4">  
+                <div class="mb-3">
+                  <label for="phone-number" class="form-label" req>Phone Number</label>
+                  <input type="text" class="form-control" id="phone" name="phone" required autocomplete="off">
+                </div>
+              </div>
+              
+          </form>
+        </div>
+
+{{end}}
