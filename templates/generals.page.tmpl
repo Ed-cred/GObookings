@@ -41,18 +41,51 @@
             <div class="col">
               <div class="row" id="reservation-dates-modal">
                 <div class="col">
-                  <input required class="form-control" type="text name="start" id="start" placeholder="Arrival Date">
+                  <input required class="form-control" type="text name="start" id="start" placeholder="Arrival Date" autocomplete="off">
                 </div>
                 <div class="col">
-                  <input required class="form-control" type="text name="end" id="end" placeholder="Departure Date">
+                  <input required class="form-control" type="text name="end" id="end" placeholder="Departure Date" autocomplete="off">
                 </div>
               </div>
             </div>
           </div>    
         </form>
       `;
-      attention.custom({msg: html, title: "Choose your booking dates"});
+      attention.custom({msg: html, 
+      title: "Choose your booking dates",
+      willOpen: () => {
+        const elem = document.getElementById('reservation-dates-modal');
+        const rangepicker = new DateRangePicker(elem, {
+          format: "dd-mm-yyyy",
+          showOnFocus: false, 
+          orientation: "top",
+        }); 
+
+      },
+      callback: (result) => {
+          console.log("called");
+          let form =  document.getElementById("check-availability-form");
+          let formData = new FormData(form);
+          formData.append("csrf_token", "{{.CSRFToken}}")
+          fetch("/search_availability-json", {
+            method: "post",
+            body: formData,
+          })
+            .then(response => response.json())
+            .then(data =>{
+              console.log(data);
+              console.log(data.ok);
+              console.log(data.message);
+
+            })
+        }
+      });
   })
+
+
+
+
+
   </script>
 
 {{end}}

@@ -6,14 +6,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Ed-cred/bookings/pkg/config"
-	"github.com/Ed-cred/bookings/pkg/handlers"
-	"github.com/Ed-cred/bookings/pkg/render"
+	"github.com/Ed-cred/bookings/internal/config"
+	"github.com/Ed-cred/bookings/internal/handlers"
+	"github.com/Ed-cred/bookings/internal/render"
 	"github.com/alexedwards/scs/v2"
 )
 
 const portNumber = ":8080"
-
 
 var app config.AppConfig
 var session *scs.SessionManager

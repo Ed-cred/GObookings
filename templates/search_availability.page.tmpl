@@ -10,21 +10,22 @@
               <h1 class="text-center mt-5">Search for Availability</h1> 
             </div>
           </div>
-          <form action="" method="get" class="needs-validation" novalidate>
+          <form action="/search_availability" method="post" class="needs-validation" novalidate>
+            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
             <div class="row" id="reservation-dates">
               <div class="col-md-2"></div>
               <div class="col-md-4">
                 <div class="mb-3">
                   <label for="start-date" class="form-label">Start Date</label>
-                  <input type="text" class="form-control" id="start-date" name="start-date" required placeholder="MM/DD/YYYY" >
+                  <input type="text" class="form-control" id="start-date" name="start" required  autocomplete="off" placeholder="MM/DD/YYYY" >
                 </div>
                 <hr>
               <button type="submit" class="btn btn-primary">Search Availability</button>
               </div>
               <div class="col-md-4">  
                 <div class="mb-3">
-                  <label for="exampleInputPassword1" class="form-label" req>End Date</label>
-                  <input type="text" class="form-control" id="end-date" name="end-date" required placeholder="MM/DD/YYYY">
+                  <label for="end-date" class="form-label" req>End Date</label>
+                  <input type="text" class="form-control" id="end-date" name="end" required autocomplete="off" placeholder="MM/DD/YYYY">
                 </div>
               </div>
             </div>

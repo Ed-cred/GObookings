@@ -3,8 +3,8 @@ package main
 import (
 	"net/http"
 
-	"github.com/Ed-cred/bookings/pkg/config"
-	"github.com/Ed-cred/bookings/pkg/handlers"
+	"github.com/Ed-cred/bookings/internal/config"
+	"github.com/Ed-cred/bookings/internal/handlers"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
@@ -23,8 +23,13 @@ func routes(app *config.AppConfig) http.Handler {
 	mux.Get("/about", handlers.Repo.About)
 	mux.Get("/generals-quarters", handlers.Repo.Generals)
 	mux.Get("/majors-suite", handlers.Repo.Majors)
+
 	mux.Get("/search_availability", handlers.Repo.Availability)
+	mux.Post("/search_availability", handlers.Repo.PostAvailability)
+	mux.Post("/search_availability-json", handlers.Repo.AvailabilityJSON)
+
 	mux.Get("/contact", handlers.Repo.Contact)
+
 	mux.Get("/make_reservation", handlers.Repo.Reservation)
 
 	fileServer := http.FileServer(http.Dir("./static/"))
