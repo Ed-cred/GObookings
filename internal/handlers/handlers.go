@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/Ed-cred/bookings/internal/config"
+	"github.com/Ed-cred/bookings/internal/forms"
 	"github.com/Ed-cred/bookings/internal/models"
 	"github.com/Ed-cred/bookings/internal/render"
 )
@@ -93,9 +94,39 @@ func (rep *Repository) Contact(w http.ResponseWriter, r *http.Request) {
 }
 func (rep *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 
-	render.RenderTemplate(w, "make_reservation.page.tmpl", r, &models.TemplateData{})
+	render.RenderTemplate(w, "make_reservation.page.tmpl", r, &models.TemplateData{
+		Form: forms.New(nil),
+	})
 
 }
+
+// PostReservation handles the posting of a reservation form
+func (rep *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		log.Println(err)
+	}
+	reservation := models.Reservation{
+		FirstName: r.Form.Get("first-name"),
+		LastName: r.Form.Get("last-name"),
+		Email: r.Form.Get("email"),
+		Phone: r.Form.Get("phone"),
+	}
+	form := forms.New(r.PostForm)
+	form.Has("first-name", r)
+	if !form.Valid() {
+		data := make(map[string]interface{})
+		data["reservation"] = reservation
+
+		render.RenderTemplate(w, "make_reservation.page.tmpl", r, &models.TemplateData{
+			Form: form,
+			Data: data,
+		})
+	
+	}
+
+}
+
 func (rep *Repository) About(w http.ResponseWriter, r *http.Request) {
 	stringMap := make(map[string]string)
 	stringMap["test"] = "Hello again"

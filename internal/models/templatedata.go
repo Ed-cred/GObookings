@@ -1,5 +1,7 @@
 package models
 
+import "github.com/Ed-cred/bookings/internal/forms"
+
 type TemplateData struct {
 	StringMap map[string]string
 	IntMap    map[string]int
@@ -9,4 +11,5 @@ type TemplateData struct {
 	Flash     string
 	Warning   string
 	Error     string
+	Form      *forms.Form
 }

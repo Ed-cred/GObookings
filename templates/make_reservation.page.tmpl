@@ -12,13 +12,18 @@
           
 
           
-          <form action="" method="get" class ="needs-validation" novalidate>
+          <form action="/make_reservation" method="post" class ="" novalidate>
+            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
             <div class="row">
               <div class="col-md-2"></div>
               <div class="col-md-4">
                 <div class="mb-3">
                   <label for="first-name" class="form-label">First Name</label>
-                  <input type="text" class="form-control" id="first-name" name="first-name" required autocomplete="off" >
+                  {{with .Form.Errors.Get "first-name"}}
+                    <label  for="first-name" class="text-danger">{{.}}</label>
+                  {{end}}
+                  <input type="text" class='form-control {{with .Form.Errors.Get "first-name"}} is-invalid {{end}}'
+                  id="first-name" name="first-name" required autocomplete="off" >
                 </div>
               </div>
               <div class="col-md-4">  
@@ -43,7 +48,7 @@
               </div>
               <div class="col-md-4">  
                 <div class="mb-3">
-                  <label for="phone-number" class="form-label" req>Phone Number</label>
+                  <label for="phone" class="form-label" req>Phone Number</label>
                   <input type="text" class="form-control" id="phone" name="phone" required autocomplete="off">
                 </div>
               </div>
