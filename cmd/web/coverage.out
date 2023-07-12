@@ -1,0 +1,11 @@
+mode: set
+github.com/Ed-cred/bookings/cmd/web/main.go:24.13,26.16 2 0
+github.com/Ed-cred/bookings/cmd/web/main.go:26.16,28.3 1 0
+github.com/Ed-cred/bookings/cmd/web/main.go:30.2,37.16 4 0
+github.com/Ed-cred/bookings/cmd/web/main.go:37.16,39.3 1 0
+github.com/Ed-cred/bookings/cmd/web/main.go:42.18,54.16 10 1
+github.com/Ed-cred/bookings/cmd/web/main.go:54.16,57.3 2 0
+github.com/Ed-cred/bookings/cmd/web/main.go:58.2,65.12 6 1
+github.com/Ed-cred/bookings/cmd/web/middleware.go:10.45,19.2 3 1
+github.com/Ed-cred/bookings/cmd/web/middleware.go:22.50,24.2 1 1
+github.com/Ed-cred/bookings/cmd/web/routes.go:12.49,44.2 18 1

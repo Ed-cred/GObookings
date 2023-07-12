@@ -104,10 +104,22 @@
               notie.alert ({
                 type: msgType,
                 text: msgText,
-                time: 2,
+                time: 3,
               })
             } else return
           }
+
+          {{with .Error}}
+          notify("error", {{.}} )
+          {{end}}
+
+          {{with .Flash}}
+          notify( "success", {{.}} )
+          {{end}}
+
+          {{with .Warning}}
+          notify("warning", {{.}} )
+          {{end}}
 
           function Prompt() {
             let toast = function(c) {
