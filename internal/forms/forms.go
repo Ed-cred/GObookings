@@ -47,7 +47,7 @@ func (f *Form) Has(field string,) bool {
 	if x != "" {
 		return true
 	}
-	return false
+	return false 
 }
 
 //Checks for vaild email adress
