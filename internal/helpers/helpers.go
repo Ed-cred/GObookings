@@ -10,12 +10,12 @@ import (
 
 var app *config.AppConfig
 
-//NewHelpers sets up app config for helpers
+// NewHelpers sets up app config for helpers
 func NewHelpers(a *config.AppConfig) {
 	app = a
 }
 
-func ClienError(w http.ResponseWriter, status int) {
+func ClientError(w http.ResponseWriter, status int) {
 	app.InfoLog.Println("Client error with status code: ", status)
 	http.Error(w, http.StatusText(status), status)
 }
