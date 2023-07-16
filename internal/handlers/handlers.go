@@ -6,10 +6,13 @@ import (
 	"net/http"
 
 	"github.com/Ed-cred/bookings/internal/config"
+	"github.com/Ed-cred/bookings/internal/driver"
 	"github.com/Ed-cred/bookings/internal/forms"
 	"github.com/Ed-cred/bookings/internal/helpers"
 	"github.com/Ed-cred/bookings/internal/models"
 	"github.com/Ed-cred/bookings/internal/render"
+	"github.com/Ed-cred/bookings/internal/repository"
+	"github.com/Ed-cred/bookings/internal/repository/dbrepo"
 )
 
 // TemplateData holds data sent from handlers to templates
@@ -20,12 +23,14 @@ var Repo *Repository
 // Repository type
 type Repository struct {
 	App *config.AppConfig
+	DB  repository.DbRepo
 }
 
 // Creates a new repository
-func NewRepository(app *config.AppConfig) *Repository {
+func NewRepository(app *config.AppConfig, db *driver.DB) *Repository {
 	return &Repository{
 		App: app,
+		DB: dbrepo.NewPostgresRepo(db.SQL, app),
 	}
 }
 
@@ -72,7 +77,7 @@ func (rep *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) 
 	out, err := json.MarshalIndent(resp, "", " 	")
 	if err != nil {
 		helpers.ServerError(w, err)
-		return 
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(out)
@@ -132,10 +137,10 @@ func (rep *Repository) Summary(w http.ResponseWriter, r *http.Request) {
 	reservation, ok := rep.App.Session.Get(r.Context(), "reservation").(models.Reservation)
 	if !ok {
 		rep.App.ErrorLog.Println("Can't get error from session")
-		rep.App.Session.Put(r.Context(),"error", "Unable to get reservation from session")
-		http.Redirect(w,r, "/", http.StatusSeeOther)
+		rep.App.Session.Put(r.Context(), "error", "Unable to get reservation from session")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
-	} 
+	}
 	rep.App.Session.Remove(r.Context(), "reservation")
 	
 	data := make(map[string]interface{})
