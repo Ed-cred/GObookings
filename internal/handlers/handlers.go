@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/Ed-cred/bookings/internal/config"
 	"github.com/Ed-cred/bookings/internal/driver"
@@ -30,7 +32,7 @@ type Repository struct {
 func NewRepository(app *config.AppConfig, db *driver.DB) *Repository {
 	return &Repository{
 		App: app,
-		DB: dbrepo.NewPostgresRepo(db.SQL, app),
+		DB:  dbrepo.NewPostgresRepo(db.SQL, app),
 	}
 }
 
@@ -105,12 +107,33 @@ func (rep *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 		helpers.ServerError(w, err)
 		return
 	}
+	sd := r.Form.Get("start_date")
+	ed := r.Form.Get("end_date")
+	// Date-time format in GO: 01/02 03:04:05PM '06 -0700
+	// yyyy-mm-dd for layout
+	layout := "2006-01-02"
+	startDate, err := time.Parse(layout, sd)
+	if err != nil {
+		helpers.ServerError(w, err)
+	}
+	endDate, err := time.Parse(layout, ed)
+	if err != nil {
+		helpers.ServerError(w, err)
+	}
+	roomID, err := strconv.Atoi(r.Form.Get("room_id"))
+	if err != nil {
+		helpers.ServerError(w, err)
+	}
 	reservation := models.Reservation{
 		FirstName: r.Form.Get("first-name"),
 		LastName:  r.Form.Get("last-name"),
 		Email:     r.Form.Get("email"),
 		Phone:     r.Form.Get("phone"),
+		StartDate: startDate,
+		EndDate:   endDate,
+		RoomID:    roomID,
 	}
+
 	form := forms.New(r.PostForm)
 	form.Required("first-name", "last-name", "email")
 	form.MinLength("first-name", 3)
@@ -124,6 +147,10 @@ func (rep *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 			Data: data,
 		})
 		return
+	}
+	err = rep.DB.InsertReservation(reservation)
+	if err != nil {
+		helpers.ServerError(w, err)
 	}
 	rep.App.Session.Put(r.Context(), "reservation", reservation)
 	http.Redirect(w, r, "/reservation_summary", http.StatusSeeOther)
@@ -142,7 +169,7 @@ func (rep *Repository) Summary(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rep.App.Session.Remove(r.Context(), "reservation")
-	
+
 	data := make(map[string]interface{})
 	data["reservation"] = reservation
 	render.Template(w, "reservation_summary.page.tmpl", r, &models.TemplateData{

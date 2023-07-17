@@ -36,11 +36,12 @@ type Reservation struct {
 	LastName  string
 	Email     string
 	Phone     string
-	Room      Room
 	StartDate time.Time
 	EndDate   time.Time
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	Room      Room
+
 }
 
 type RoomRestriction struct {
@@ -48,11 +49,11 @@ type RoomRestriction struct {
 	RoomID        int
 	ReservationID int
 	RestricitonID int
-	Room          Room
-	Reservation   Reservation
-	Restriction   Restriction
 	StartDate     time.Time
 	EndDate       time.Time
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
+	Room          Room
+	Reservation   Reservation
+	Restriction   Restriction
 }
