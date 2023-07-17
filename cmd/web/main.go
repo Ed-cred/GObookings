@@ -47,6 +47,9 @@ func main() {
 
 func run() (*driver.DB, error) {
 	gob.Register(models.Reservation{})
+	gob.Register(models.User{})
+	gob.Register(models.Room{})
+	gob.Register(models.Restriction{})
 
 	// change to true when in produciton
 	app.InProd = false
@@ -77,7 +80,7 @@ func run() (*driver.DB, error) {
 	}
 	app.TemplateCache = tc
 	app.UseCache = false
-	render.NewTemplates(&app)
+	render.NewRenderer(&app)
 
 	repo := handlers.NewRepository(&app, db)
 	handlers.NewHandlers(repo)

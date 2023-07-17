@@ -17,8 +17,8 @@ import (
 var app *config.AppConfig
 var pathToTemplate = "./templates"
 
-// NewTemplates sets the config for the package
-func NewTemplates(a *config.AppConfig) {
+// NewRenderer sets the config for the package
+func NewRenderer(a *config.AppConfig) {
 	app = a
 }
 
@@ -31,9 +31,9 @@ func AddDefaultData(td *models.TemplateData, r *http.Request) *models.TemplateDa
 	return td
 }
 
-//RenderTemplate is a helper function to render html templates
+//Template is a helper function to render html templates
 
-func RenderTemplate(w http.ResponseWriter, tmpl string, r *http.Request, td *models.TemplateData) error {
+func Template(w http.ResponseWriter, tmpl string, r *http.Request, td *models.TemplateData) error {
 	var tc map[string]*template.Template
 	if app.UseCache {
 		//get template cache from the app config
