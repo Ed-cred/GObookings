@@ -18,21 +18,21 @@
               <div class="col-md-2"></div>
               <div class="col-md-4">
                 <div class="mb-3">
-                  <label for="first-name" class="form-label">First Name</label>
+                  <label for="first_name" class="form-label">First Name</label>
                   {{with .Form.Errors.Get "first-name"}}
-                    <label  for="first-name" class="text-danger">{{.}}</label>
+                    <label  for="first_name" class="text-danger">{{.}}</label>
                   {{end}}
-                  <input type="text" class='form-control {{with .Form.Errors.Get "first-name"}} is-invalid {{end}}'
-                  id="first-name" name="first-name" required value="{{$res.FirstName}}" autocomplete="off" >
+                  <input type="text" class='form-control {{with .Form.Errors.Get "first_name"}} is-invalid {{end}}'
+                  id="first_name" name="first_name" required value="{{$res.FirstName}}" autocomplete="off" >
                 </div>
               </div>
               <div class="col-md-4">  
                 <div class="mb-3">
-                  <label for="last-name" class="form-label" req>Last Name</label>
+                  <label for="last_name" class="form-label" req>Last Name</label>
                   {{with .Form.Errors.Get "last-name"}}
-                    <label  for="last-name" class="text-danger">{{.}}</label>
+                    <label  for="last_name" class="text-danger">{{.}}</label>
                   {{end}}
-                  <input type="text" class='form-control {{with .Form.Errors.Get "last-name"}} is-invalid {{end}}' id="last-name" name="last-name" value="{{$res.LastName}}" required autocomplete="off">
+                  <input type="text" class='form-control {{with .Form.Errors.Get "last_name"}} is-invalid {{end}}' id="last_name" name="last_name" value="{{$res.LastName}}" required autocomplete="off">
                 </div>
               </div>
             </div>

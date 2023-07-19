@@ -109,37 +109,44 @@ func (rep *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	}
 	sd := r.Form.Get("start_date")
 	ed := r.Form.Get("end_date")
-	// Date-time format in GO: 01/02 03:04:05PM '06 -0700
-	// yyyy-mm-dd for layout
+
+	// 2020-01-01 -- 01/02 03:04:05PM '06 -0700
+
 	layout := "2006-01-02"
+
 	startDate, err := time.Parse(layout, sd)
 	if err != nil {
-		helpers.ServerError(w, err)
+		rep.App.Session.Put(r.Context(), "error", "can't parse start date")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
+
 	endDate, err := time.Parse(layout, ed)
 	if err != nil {
-		helpers.ServerError(w, err)
+		rep.App.Session.Put(r.Context(), "error", "can't get parse end date")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
+
 	roomID, err := strconv.Atoi(r.Form.Get("room_id"))
 	if err != nil {
-		helpers.ServerError(w, err)
+		rep.App.Session.Put(r.Context(), "error", "invalid data!")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
+
 	reservation := models.Reservation{
-		FirstName: r.Form.Get("first-name"),
-		LastName:  r.Form.Get("last-name"),
-		Email:     r.Form.Get("email"),
+		FirstName: r.Form.Get("first_name"),
+		LastName:  r.Form.Get("last_name"),
 		Phone:     r.Form.Get("phone"),
+		Email:     r.Form.Get("email"),
 		StartDate: startDate,
 		EndDate:   endDate,
 		RoomID:    roomID,
 	}
-
 	form := forms.New(r.PostForm)
-	form.Required("first-name", "last-name", "email")
-	form.MinLength("first-name", 3)
+	form.Required("first_name", "last_name", "email")
+	form.MinLength("first_name", 3)
 	form.IsEmail("email")
 	if !form.Valid() {
 		data := make(map[string]interface{})
@@ -153,7 +160,8 @@ func (rep *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	}
 	newReservationID, err := rep.DB.InsertReservation(reservation)
 	if err != nil {
-		helpers.ServerError(w, err)
+		rep.App.Session.Put(r.Context(), "error", "can't insert reservation into database!")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
 	restriction := models.RoomRestriction{
@@ -165,7 +173,8 @@ func (rep *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	}
 	err = rep.DB.InsertRoomRestriction(restriction)
 	if err != nil {
-		helpers.ServerError(w, err)
+		rep.App.Session.Put(r.Context(), "error", "can't insert room restriction!")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
 	rep.App.Session.Put(r.Context(), "reservation", reservation)

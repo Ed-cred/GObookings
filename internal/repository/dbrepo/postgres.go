@@ -17,13 +17,13 @@ func (m *postgresDbRepo) InsertReservation(res models.Reservation) (int, error) 
 	defer cancel()
 	var newID int
 
-	stmt := `insert into reservations (email, first_name, last_name, phone, start_date, end_date, room_id, created_at, updated_at) 
+	stmt := `insert into reservations (first_name, last_name, email,  phone, start_date, end_date, room_id, created_at, updated_at) 
 			values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 			returning id`
 	err := m.DB.QueryRowContext(ctx, stmt,
-		res.Email,
 		res.FirstName,
 		res.LastName,
+		res.Email,
 		res.Phone,
 		res.StartDate,
 		res.EndDate,
@@ -31,10 +31,12 @@ func (m *postgresDbRepo) InsertReservation(res models.Reservation) (int, error) 
 		time.Now(),
 		time.Now(),
 	).Scan(&newID)
+
 	if err != nil {
 		log.Printf("Error inserting reservation data into database: %v", err)
 		return 0, err
 	}
+	
 	return newID, nil
 }
 
@@ -54,6 +56,7 @@ func (m *postgresDbRepo) InsertRoomRestriction(r models.RoomRestriction) error {
 		time.Now(),	
 	)
 	if err != nil {
+		log.Println("Unable to insert data into room_restrictions table: ", err)
 		return err
 	}
 	return nil

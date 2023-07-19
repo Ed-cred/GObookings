@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"github.com/Ed-cred/bookings/internal/config"
+	"github.com/Ed-cred/bookings/internal/driver"
 	"github.com/Ed-cred/bookings/internal/handlers"
 	"github.com/Ed-cred/bookings/internal/helpers"
 	"github.com/Ed-cred/bookings/internal/models"
 	"github.com/Ed-cred/bookings/internal/render"
-	"github.com/Ed-cred/bookings/internal/driver"
 	"github.com/alexedwards/scs/v2"
 )
 
@@ -73,6 +73,7 @@ func run() (*driver.DB, error) {
 		log.Fatal("Cannot connect to database: ", err)
 		return nil, err
 	}
+
 	tc, err := render.CreateTemplateCache()
 	if err != nil {
 		log.Fatal("Could not create template cache")
