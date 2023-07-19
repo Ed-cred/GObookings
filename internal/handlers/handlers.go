@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -59,9 +58,35 @@ func (rep *Repository) Availability(w http.ResponseWriter, r *http.Request) {
 
 // PostAvailability handler for post method
 func (rep *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) {
-	start := r.Form.Get("start") // start being the name of the input in HTML form
-	end := r.Form.Get("end")
-	w.Write([]byte(fmt.Sprintf("Start date is %s and end date is %s", start, end)))
+	sd := r.Form.Get("start")
+	ed := r.Form.Get("end")
+
+	// 2020-01-01 -- 01/02 03:04:05PM '06 -0700
+
+	layout := "2006-01-02"
+
+	startDate, err := time.Parse(layout, sd)
+	if err != nil {
+		rep.App.Session.Put(r.Context(), "error", "can't parse start date")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
+
+	endDate, err := time.Parse(layout, ed)
+	if err != nil {
+		rep.App.Session.Put(r.Context(), "error", "can't get parse end date")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
+	rooms, err := rep.DB.SearchAvailabilityAllRooms(startDate, endDate)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+	for _, i := range rooms {
+		rep.App.InfoLog.Println("Room:", i.ID, i.RoomName)
+	}
+	// w.Write([]byte(fmt.Sprintf("Start date is %s and end date is %s", , endDate)))
 }
 
 type jsonResponse struct {
