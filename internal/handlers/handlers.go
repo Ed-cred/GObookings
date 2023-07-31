@@ -83,10 +83,22 @@ func (rep *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) 
 		helpers.ServerError(w, err)
 		return
 	}
-	for _, i := range rooms {
-		rep.App.InfoLog.Println("Room:", i.ID, i.RoomName)
+
+	if len(rooms) == 0 {
+		rep.App.Session.Put(r.Context(), "error", "No availability")
+		http.Redirect(w, r, "/search_availability", http.StatusSeeOther)
+		return
 	}
-	// w.Write([]byte(fmt.Sprintf("Start date is %s and end date is %s", , endDate)))
+	data := make(map[string]interface{})
+	data["rooms"] = rooms
+	res := models.Reservation{
+		StartDate: startDate,
+		EndDate: endDate,
+	}
+	rep.App.Session.Put(r.Context(), "reservation", res)
+	render.Template(w, "choose_room.page.tmpl", r, &models.TemplateData{
+		Data: data,
+	})
 }
 
 type jsonResponse struct {
@@ -190,9 +202,9 @@ func (rep *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	restriction := models.RoomRestriction{
-		StartDate: startDate,
-		EndDate: endDate,
-		RoomID: roomID,
+		StartDate:     startDate,
+		EndDate:       endDate,
+		RoomID:        roomID,
 		ReservationID: newReservationID,
 		RestricitonID: 1,
 	}
