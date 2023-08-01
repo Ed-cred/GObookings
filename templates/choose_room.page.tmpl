@@ -7,9 +7,11 @@
     <div class="col"> 
       <h1>Choose a room</h1>
       {{$rooms := index .Data "rooms"}}
-      {{range $rooms}}
-        {{.RoomName}} <br>
-      {{end}}
+      <ul>
+        {{range $rooms}}
+         <li><a href="/choose_room/{{.ID}}"> {{.RoomName}}</a></li> <br>
+        {{end}}
+      </ul>
     </div>
   </div>
 </div>

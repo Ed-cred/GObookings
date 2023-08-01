@@ -14,6 +14,7 @@ import (
 	"github.com/Ed-cred/bookings/internal/render"
 	"github.com/Ed-cred/bookings/internal/repository"
 	"github.com/Ed-cred/bookings/internal/repository/dbrepo"
+	"github.com/go-chi/chi"
 )
 
 // TemplateData holds data sent from handlers to templates
@@ -237,4 +238,21 @@ func (rep *Repository) Summary(w http.ResponseWriter, r *http.Request) {
 	render.Template(w, "reservation_summary.page.tmpl", r, &models.TemplateData{
 		Data: data,
 	})
+}
+
+func (rep *Repository) ChooseRoom(w http.ResponseWriter, r *http.Request) {
+	roomId, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+	res, ok := rep.App.Session.Get(r.Context(), "reservation").(models.Reservation)
+	if !ok {
+		helpers.ServerError(w, err)
+		return
+	}
+	res.RoomID = roomId
+	rep.App.Session.Put(r.Context(), "reservation", res)
+	http.Redirect(w, r, "/make_reservation", http.StatusSeeOther)
+
 }
