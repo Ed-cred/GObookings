@@ -109,9 +109,33 @@ type jsonResponse struct {
 
 // AvailabilityJSON handler for on page post request and sends JSON response
 func (rep *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
+	sd := r.Form.Get("start")
+	ed := r.Form.Get("end")
+	layout := "2006-01-02"
+
+	startDate, err := time.Parse(layout, sd)
+	if err != nil {
+		rep.App.Session.Put(r.Context(), "error", "can't parse start date")
+		//http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
+
+	endDate, err := time.Parse(layout, ed)
+	if err != nil {
+		rep.App.Session.Put(r.Context(), "error", "can't get parse end date")
+		//http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
+
+	roomID,_ := strconv.Atoi(r.Form.Get("room_id"))
+
+	available, err := rep.DB.SearchAvailabilityByRoomID(startDate, endDate, roomID)
+	if err != nil {
+		return
+	}
 	resp := jsonResponse{
-		Ok:      true,
-		Message: "Available",
+		Ok:      available,
+		Message: "",
 	}
 
 	out, err := json.MarshalIndent(resp, "", " 	")
