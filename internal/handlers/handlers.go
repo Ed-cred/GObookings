@@ -18,7 +18,6 @@ import (
 	"github.com/go-chi/chi"
 )
 
-// TemplateData holds data sent from handlers to templates
 
 // Repository used by the handlers
 var Repo *Repository
@@ -140,6 +139,7 @@ func (rep *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res.Room.RoomName = room.RoomName
+	rep.App.Session.Put(r.Context(), "reservation", res)
 	sd := res.StartDate.Format("2006-01-02")
 	ed := res.EndDate.Format("2006-01-02")
 	stringMap := make(map[string]string)
@@ -156,48 +156,22 @@ func (rep *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 
 // PostReservation handles the posting of a reservation form
 func (rep *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
+	reservation, ok := rep.App.Session.Get(r.Context(), "reservation").(models.Reservation)
+	if !ok {
+		helpers.ServerError(w, errors.New("unable to get data from session"))
+		return
+	}
+
 	err := r.ParseForm()
 	if err != nil {
 		helpers.ServerError(w, err)
 		return
 	}
-	sd := r.Form.Get("start_date")
-	ed := r.Form.Get("end_date")
+	reservation.FirstName = r.Form.Get("first_name")
+	reservation.LastName = r.Form.Get("last_name")
+	reservation.Phone = r.Form.Get("phone")
+	reservation.Email = r.Form.Get("email")
 
-	// 2020-01-01 -- 01/02 03:04:05PM '06 -0700
-
-	layout := "2006-01-02"
-
-	startDate, err := time.Parse(layout, sd)
-	if err != nil {
-		rep.App.Session.Put(r.Context(), "error", "can't parse start date")
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-		return
-	}
-
-	endDate, err := time.Parse(layout, ed)
-	if err != nil {
-		rep.App.Session.Put(r.Context(), "error", "can't get parse end date")
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-		return
-	}
-
-	roomID, err := strconv.Atoi(r.Form.Get("room_id"))
-	if err != nil {
-		rep.App.Session.Put(r.Context(), "error", "invalid data!")
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-		return
-	}
-
-	reservation := models.Reservation{
-		FirstName: r.Form.Get("first_name"),
-		LastName:  r.Form.Get("last_name"),
-		Phone:     r.Form.Get("phone"),
-		Email:     r.Form.Get("email"),
-		StartDate: startDate,
-		EndDate:   endDate,
-		RoomID:    roomID,
-	}
 	form := forms.New(r.PostForm)
 	form.Required("first_name", "last_name", "email")
 	form.MinLength("first_name", 3)
@@ -219,9 +193,9 @@ func (rep *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	restriction := models.RoomRestriction{
-		StartDate:     startDate,
-		EndDate:       endDate,
-		RoomID:        roomID,
+		StartDate:     reservation.StartDate,
+		EndDate:       reservation.EndDate,
+		RoomID:        reservation.RoomID,
 		ReservationID: newReservationID,
 		RestricitonID: 1,
 	}
@@ -248,11 +222,17 @@ func (rep *Repository) Summary(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rep.App.Session.Remove(r.Context(), "reservation")
-
+	layout := "2006-01-02"
+	sd:= reservation.StartDate.Format(layout)
+	ed := reservation.EndDate.Format(layout)
+	stringMap := make(map[string]string)
+	stringMap["start_date"] = sd
+	stringMap["end_date"] = ed
 	data := make(map[string]interface{})
 	data["reservation"] = reservation
 	render.Template(w, "reservation_summary.page.tmpl", r, &models.TemplateData{
 		Data: data,
+		StringMap: stringMap,
 	})
 }
 
