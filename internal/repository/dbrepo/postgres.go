@@ -31,12 +31,11 @@ func (m *postgresDbRepo) InsertReservation(res models.Reservation) (int, error) 
 		time.Now(),
 		time.Now(),
 	).Scan(&newID)
-
 	if err != nil {
 		log.Printf("Error inserting reservation data into database: %v", err)
 		return 0, err
 	}
-	
+
 	return newID, nil
 }
 
@@ -53,7 +52,7 @@ func (m *postgresDbRepo) InsertRoomRestriction(r models.RoomRestriction) error {
 		r.ReservationID,
 		r.RestricitonID,
 		time.Now(),
-		time.Now(),	
+		time.Now(),
 	)
 	if err != nil {
 		log.Println("Unable to insert data into room_restrictions table: ", err)
@@ -62,23 +61,23 @@ func (m *postgresDbRepo) InsertRoomRestriction(r models.RoomRestriction) error {
 	return nil
 }
 
-//Returns true if the date range is available for specified roomID,otherwise false
+// Returns true if the date range is available for specified roomID,otherwise false
 func (m *postgresDbRepo) SearchAvailabilityByRoomID(start, end time.Time, roomID int) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 	var numRows int
 	query := `select count(id) from room_restrictions 
-			where roomID = $1 and $2 < end_date and $3 > start_date`
-	row:= m.DB.QueryRowContext(ctx, query, roomID, start, end)
+			where room_id = $1 and $2 < end_date and $3 > start_date`
+	row := m.DB.QueryRowContext(ctx, query, roomID, start, end)
 	err := row.Scan(&numRows)
 	if err != nil {
 		return false, err
-	}		
+	}
 	if numRows == 0 {
 		return true, nil
 	}
 	return false, nil
-} 
+}
 
 func (m *postgresDbRepo) SearchAvailabilityAllRooms(start, end time.Time) ([]models.Room, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -105,13 +104,12 @@ func (m *postgresDbRepo) SearchAvailabilityAllRooms(start, end time.Time) ([]mod
 	return rooms, nil
 }
 
-
-func (m *postgresDbRepo) GetRoomById (id int) (models.Room, error) {
+func (m *postgresDbRepo) GetRoomById(id int) (models.Room, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	var room models.Room
 	query := `SELECT id, room_name, created_at, updated_at FROM rooms where id=$1`
-	row := m.DB.QueryRowContext(ctx, query, id)	
+	row := m.DB.QueryRowContext(ctx, query, id)
 	err := row.Scan(&room.ID, &room.RoomName, &room.CreatedAt, &room.UpdatedAt)
 	if err != nil {
 		return room, err

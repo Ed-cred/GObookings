@@ -18,7 +18,6 @@ import (
 	"github.com/go-chi/chi"
 )
 
-
 // Repository used by the handlers
 var Repo *Repository
 
@@ -94,7 +93,7 @@ func (rep *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) 
 	data["rooms"] = rooms
 	res := models.Reservation{
 		StartDate: startDate,
-		EndDate: endDate,
+		EndDate:   endDate,
 	}
 	rep.App.Session.Put(r.Context(), "reservation", res)
 	render.Template(w, "choose_room.page.tmpl", r, &models.TemplateData{
@@ -109,40 +108,47 @@ type jsonResponse struct {
 
 // AvailabilityJSON handler for on page post request and sends JSON response
 func (rep *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		resp := jsonResponse{
+			Ok:      false,
+			Message: "Internal server error",
+		}
+
+		out, _ := json.MarshalIndent(resp, "", "     ")
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(out)
+		return
+	}
+
 	sd := r.Form.Get("start")
 	ed := r.Form.Get("end")
+
 	layout := "2006-01-02"
+	startDate, _ := time.Parse(layout, sd)
+	endDate, _ := time.Parse(layout, ed)
 
-	startDate, err := time.Parse(layout, sd)
-	if err != nil {
-		rep.App.Session.Put(r.Context(), "error", "can't parse start date")
-		//http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-		return
-	}
-
-	endDate, err := time.Parse(layout, ed)
-	if err != nil {
-		rep.App.Session.Put(r.Context(), "error", "can't get parse end date")
-		//http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-		return
-	}
-
-	roomID,_ := strconv.Atoi(r.Form.Get("room_id"))
+	roomID, _ := strconv.Atoi(r.Form.Get("room_id"))
 
 	available, err := rep.DB.SearchAvailabilityByRoomID(startDate, endDate, roomID)
 	if err != nil {
+		
+		resp := jsonResponse{
+			Ok:      false,
+			Message: "Error querying database",
+		}
+
+		out, _ := json.MarshalIndent(resp, "", "     ")
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(out)
 		return
 	}
 	resp := jsonResponse{
 		Ok:      available,
 		Message: "",
 	}
+	out, _ := json.MarshalIndent(resp, "", "     ")
 
-	out, err := json.MarshalIndent(resp, "", " 	")
-	if err != nil {
-		helpers.ServerError(w, err)
-		return
-	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(out)
 }
@@ -172,8 +178,8 @@ func (rep *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
 	data["reservation"] = res
 	render.Template(w, "make_reservation.page.tmpl", r, &models.TemplateData{
-		Form: forms.New(nil),
-		Data: data,
+		Form:      forms.New(nil),
+		Data:      data,
 		StringMap: stringMap,
 	})
 }
@@ -247,7 +253,7 @@ func (rep *Repository) Summary(w http.ResponseWriter, r *http.Request) {
 	}
 	rep.App.Session.Remove(r.Context(), "reservation")
 	layout := "2006-01-02"
-	sd:= reservation.StartDate.Format(layout)
+	sd := reservation.StartDate.Format(layout)
 	ed := reservation.EndDate.Format(layout)
 	stringMap := make(map[string]string)
 	stringMap["start_date"] = sd
@@ -255,7 +261,7 @@ func (rep *Repository) Summary(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
 	data["reservation"] = reservation
 	render.Template(w, "reservation_summary.page.tmpl", r, &models.TemplateData{
-		Data: data,
+		Data:      data,
 		StringMap: stringMap,
 	})
 }
@@ -274,5 +280,4 @@ func (rep *Repository) ChooseRoom(w http.ResponseWriter, r *http.Request) {
 	res.RoomID = roomId
 	rep.App.Session.Put(r.Context(), "reservation", res)
 	http.Redirect(w, r, "/make_reservation", http.StatusSeeOther)
-
 }
