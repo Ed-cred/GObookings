@@ -102,8 +102,11 @@ func (rep *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) 
 }
 
 type jsonResponse struct {
-	Ok      bool   `json:"ok"`
-	Message string `json:"message"`
+	Ok        bool   `json:"ok"`
+	Message   string `json:"message"`
+	RoomId    string `json:"room_id"`
+	StartDate string `json:"start_date"`
+	EndDate   string `json:"end_date"`
 }
 
 // AvailabilityJSON handler for on page post request and sends JSON response
@@ -132,7 +135,7 @@ func (rep *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) 
 
 	available, err := rep.DB.SearchAvailabilityByRoomID(startDate, endDate, roomID)
 	if err != nil {
-		
+
 		resp := jsonResponse{
 			Ok:      false,
 			Message: "Error querying database",
@@ -144,8 +147,11 @@ func (rep *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	resp := jsonResponse{
-		Ok:      available,
-		Message: "",
+		Ok:        available,
+		Message:   "",
+		StartDate: sd,
+		EndDate:   ed,
+		RoomId: strconv.Itoa(roomID),
 	}
 	out, _ := json.MarshalIndent(resp, "", "     ")
 
