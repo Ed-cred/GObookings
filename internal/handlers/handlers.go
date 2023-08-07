@@ -312,5 +312,4 @@ func (rep *Repository) BookRoom(w http.ResponseWriter, r *http.Request) {
 	res.Room.RoomName = room.RoomName
 	rep.App.Session.Put(r.Context(), "reservation", res)
 	http.Redirect(w, r, "make_reservation", http.StatusSeeOther)
-	return
 }
