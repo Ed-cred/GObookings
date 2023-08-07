@@ -287,3 +287,30 @@ func (rep *Repository) ChooseRoom(w http.ResponseWriter, r *http.Request) {
 	rep.App.Session.Put(r.Context(), "reservation", res)
 	http.Redirect(w, r, "/make_reservation", http.StatusSeeOther)
 }
+
+//Takes URL params, builds session var and redirects to make_resevation page
+func (rep *Repository) BookRoom(w http.ResponseWriter, r *http.Request) {
+	roomId, err := strconv.Atoi(r.URL.Query().Get("id"))
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+	sd := r.URL.Query().Get("s")
+	ed := r.URL.Query().Get("e")
+	layout := "2006-01-02"
+	startDate, _ := time.Parse(layout, sd)
+	endDate, _ := time.Parse(layout, ed)
+	room, err := rep.DB.GetRoomById(roomId)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+	var res models.Reservation
+	res.RoomID = roomId
+	res.StartDate = startDate
+	res.EndDate = endDate
+	res.Room.RoomName = room.RoomName
+	rep.App.Session.Put(r.Context(), "reservation", res)
+	http.Redirect(w, r, "make_reservation", http.StatusSeeOther)
+	return
+}
