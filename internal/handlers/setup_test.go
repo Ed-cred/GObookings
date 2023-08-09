@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"testing"
 	"time"
 
 	"github.com/Ed-cred/bookings/internal/config"
@@ -25,7 +26,8 @@ var (
 	pathToTemplate = "./../../templates"
 )
 
-func getRoutes() http.Handler {
+
+func TestMain(m *testing.M) {
 	gob.Register(models.Reservation{})
 
 	// change to true when in produciton
@@ -48,9 +50,12 @@ func getRoutes() http.Handler {
 	app.TemplateCache = tc
 	app.UseCache = true
 	repo := NewTestRepository(&app)
-	NewHandlers(repo)
+	NewHandlers(repo) 
 	render.NewRenderer(&app)
+	os.Exit(m.Run())	
+}
 
+func getRoutes() http.Handler {
 	mux := chi.NewRouter()
 
 	mux.Use(middleware.Recoverer)
