@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -135,10 +134,25 @@ func (rep *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) 
 	ed := r.Form.Get("end")
 
 	layout := "2006-01-02"
-	startDate, _ := time.Parse(layout, sd)
-	endDate, _ := time.Parse(layout, ed)
+	startDate, err := time.Parse(layout, sd)
+	if err != nil {
+		rep.App.Session.Put(r.Context(), "error", "can't parse start date")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
+	endDate, err := time.Parse(layout, ed)
+	if err != nil {
+		rep.App.Session.Put(r.Context(), "error", "can't parse end date")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
 
-	roomID, _ := strconv.Atoi(r.Form.Get("room_id"))
+	roomID, err := strconv.Atoi(r.Form.Get("room_id"))
+	if err != nil {
+		rep.App.Session.Put(r.Context(), "error", "type conversion failed for string to integer")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
 
 	available, err := rep.DB.SearchAvailabilityByRoomID(startDate, endDate, roomID)
 	if err != nil {
@@ -158,7 +172,7 @@ func (rep *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) 
 		Message:   "",
 		StartDate: sd,
 		EndDate:   ed,
-		RoomId: strconv.Itoa(roomID),
+		RoomId:    strconv.Itoa(roomID),
 	}
 	out, _ := json.MarshalIndent(resp, "", "     ")
 
@@ -203,13 +217,15 @@ func (rep *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 func (rep *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	reservation, ok := rep.App.Session.Get(r.Context(), "reservation").(models.Reservation)
 	if !ok {
-		helpers.ServerError(w, errors.New("unable to get data from session"))
+		rep.App.Session.Put(r.Context(), "error", "can't get reservation from session")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
 
 	err := r.ParseForm()
 	if err != nil {
-		helpers.ServerError(w, err)
+		rep.App.Session.Put(r.Context(), "error", "can't parse form")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
 	reservation.FirstName = r.Form.Get("first_name")
@@ -224,7 +240,7 @@ func (rep *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	if !form.Valid() {
 		data := make(map[string]interface{})
 		data["reservation"] = reservation
-
+		http.Error(w, "Invalid form data", http.StatusSeeOther)
 		render.Template(w, "make_reservation.page.tmpl", r, &models.TemplateData{
 			Form: form,
 			Data: data,
@@ -297,7 +313,7 @@ func (rep *Repository) ChooseRoom(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/make_reservation", http.StatusSeeOther)
 }
 
-//Takes URL params, builds session var and redirects to make_resevation page
+// Takes URL params, builds session var and redirects to make_resevation page
 func (rep *Repository) BookRoom(w http.ResponseWriter, r *http.Request) {
 	roomId, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil {

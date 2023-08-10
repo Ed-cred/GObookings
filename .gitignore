@@ -1,3 +1,5 @@
 database.yml
 run.bat
 bookings.exe
+coverage.out
+coverage.html
