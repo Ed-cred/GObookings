@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"testing"
 
 	"github.com/Ed-cred/bookings/internal/models"
@@ -20,18 +19,15 @@ var theTests = []struct {
 	name               string
 	url                string
 	method             string
-	params             []postData
 	expectedStatusCode int
 }{
-// 	{"home", "/", "GET", []postData{}, http.StatusOK},
-// 	{"about", "/about", "GET", []postData{}, http.StatusOK},
-// 	{"gq", "/generals-quarters", "GET", []postData{}, http.StatusOK},
-// 	{"ms", "/majors-suite", "GET", []postData{}, http.StatusOK},
-// 	{"sa", "/search_availability", "GET", []postData{}, http.StatusOK},
-// 	{"contact", "/contact", "GET", []postData{}, http.StatusOK},
-// 	{"mr", "/make_reservation", "GET", []postData{}, http.StatusOK},
-// 	{"mr", "/make_reservation", "GET", []postData{}, http.StatusOK},
-// 	{"sm", "/reservation_summary", "GET", []postData{}, http.StatusOK},
+	{"home", "/", "GET",  http.StatusOK},
+	{"about", "/about", "GET", http.StatusOK},
+	{"gq", "/generals-quarters", "GET" , http.StatusOK},
+	{"ms", "/majors-suite", "GET", http.StatusOK},
+	{"sa", "/search_availability", "GET", http.StatusOK},
+	{"contact", "/contact", "GET", http.StatusOK},
+
 // 	{"post_search_avail", "/search_availability", "POST", []postData{
 // 		{key:"start", value:"01-01-2020"},
 // 		{key:"end", value:"09-02-2020"},
@@ -64,20 +60,6 @@ func TestHandlers(t *testing.T) {
 			t.Errorf("For %s, expected status code %d, got %d",e.name, e.expectedStatusCode, resp.StatusCode)
 		}
 
-		} else{
-			values := url.Values{}
-			for _, x := range e.params {
-				values.Add(x.key, x.value)
-			}
-			resp, err :=ts.Client().PostForm(ts.URL+e.url, values)
-			if err != nil {
-				t.Log(err)
-				t.Fatal(err)
-			}
-			if resp.StatusCode != e.expectedStatusCode {
-				t.Errorf("For %s, expected status code %d, got %d",e.name, e.expectedStatusCode, resp.StatusCode)
-			}
-
 		}
 	}
 }
@@ -101,6 +83,27 @@ func TestRepoReservation(t *testing.T) {
 	handler := http.HandlerFunc(Repo.Reservation)
 	handler.ServeHTTP(rr, req)
 	if rr.Code != http.StatusOK {
+		t.Errorf("Reservation handler returned %v, expected %v", rr.Code, http.StatusOK)
+	}
+	//test case when reservation is not in session
+	req, _ = http.NewRequest("GET", "/make_reservation", nil)
+	ctx = getCtx(req)
+	req = req.WithContext(ctx)
+	rr = httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusTemporaryRedirect {
+		t.Errorf("Reservation handler returned %v, expected %v", rr.Code, http.StatusOK)
+	}
+
+	//test with non-existant room
+	req, _ = http.NewRequest("GET", "/make_reservation", nil)
+	ctx = getCtx(req)
+	req = req.WithContext(ctx)
+	rr = httptest.NewRecorder()
+	reservation.RoomID = 100
+	session.Put(ctx, "reservation", reservation)
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusTemporaryRedirect {
 		t.Errorf("Reservation handler returned %v, expected %v", rr.Code, http.StatusOK)
 	}
 }
