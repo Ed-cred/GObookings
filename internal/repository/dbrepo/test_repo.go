@@ -12,7 +12,7 @@ func (m *testDBRepo) AllUsers() bool {
 }
 
 func (m *testDBRepo) InsertReservation(res models.Reservation) (int, error) {
-	if res.RoomID == 2 {
+	if res.RoomID == 4 {
 		return 0, errors.New("failed to insert reservation into database")
 	}
 	return 1, nil

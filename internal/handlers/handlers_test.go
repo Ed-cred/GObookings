@@ -13,10 +13,6 @@ import (
 	"github.com/Ed-cred/bookings/internal/models"
 )
 
-type postData struct {
-	key   string
-	value string
-}
 
 var theTests = []struct {
 	name               string
@@ -148,7 +144,7 @@ func TestRepoPostReservation(t *testing.T) {
 	}
 
 	//test for missing session data
-	req, _ = http.NewRequest("POST", "/make_reservation",nil)
+	req, _ = http.NewRequest("POST", "/make_reservation", strings.NewReader(reqBody))
 	ctx = getCtx(req)
 	req = req.WithContext(ctx)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -190,7 +186,7 @@ func TestRepoPostReservation(t *testing.T) {
 	reqBody = fmt.Sprintf("%s&%s", reqBody, "end_date=2050-01-02")
 	reqBody = fmt.Sprintf("%s&%s", reqBody, "first_name=J")
 	reqBody = fmt.Sprintf("%s&%s", reqBody, "last_name=Smith")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "email=john@smith.com")
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "email=john@smith")
 	reqBody = fmt.Sprintf("%s&%s", reqBody, "phone=079286573")
 	reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=1")
 
@@ -207,19 +203,38 @@ func TestRepoPostReservation(t *testing.T) {
 	}
 
 	//test unable to insert reservation into db
-	sd = sd.AddDate(2060, 01, 01)
-	ed = ed.AddDate(2060, 01, 02)
-	reservation = models.Reservation{
-		StartDate: sd,
-		EndDate: ed,
+	sdr := sd.AddDate(2070, 01, 01)
+	edr := ed.AddDate(2070, 01, 02)
+	res := models.Reservation{
+		StartDate: sdr,
+		EndDate: edr,
+		RoomID: 4,
 	}
-	reqBody = "start_date=2050-01-01"
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "end_date=2050-01-02")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "first_name=John")
+	
+	reqBody = "first_name=Jophn"
 	reqBody = fmt.Sprintf("%s&%s", reqBody, "last_name=Smith")
 	reqBody = fmt.Sprintf("%s&%s", reqBody, "email=john@smith.com")
 	reqBody = fmt.Sprintf("%s&%s", reqBody, "phone=079286573")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=2")
+
+	req, _ = http.NewRequest("POST", "/make_reservation",strings.NewReader(reqBody))
+	ctx = getCtx(req)
+	session.Put(ctx, "reservation",res)
+	req = req.WithContext(ctx)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr = httptest.NewRecorder()
+	handler = http.HandlerFunc(Repo.PostReservation)
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusTemporaryRedirect {
+		t.Errorf("PostReservation handler returned %v for failing to insert reservation, expected %v", rr.Code, http.StatusTemporaryRedirect)
+	}
+
+	//test unable to insert room restriction into db
+	reservation.RoomID = 3
+	reqBody = "first_name=Jophn"
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "last_name=Smith")
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "email=john@smith.com")
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "phone=079286573")
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=3")
 
 	req, _ = http.NewRequest("POST", "/make_reservation",strings.NewReader(reqBody))
 	ctx = getCtx(req)
@@ -229,10 +244,9 @@ func TestRepoPostReservation(t *testing.T) {
 	rr = httptest.NewRecorder()
 	handler = http.HandlerFunc(Repo.PostReservation)
 	handler.ServeHTTP(rr, req)
-	if rr.Code != http.StatusSeeOther {
-		t.Errorf("PostReservation handler returned %v for failing to insert reservation, expected %v", rr.Code, http.StatusSeeOther)
+	if rr.Code != http.StatusTemporaryRedirect {
+		t.Errorf("PostReservation handler returned %v for failing to insert reservation, expected %v", rr.Code, http.StatusTemporaryRedirect)
 	}
-
 }
 
 func getCtx(req *http.Request) context.Context {
