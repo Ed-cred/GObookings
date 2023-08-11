@@ -35,6 +35,21 @@ func (m *testDBRepo) SearchAvailabilityByRoomID(start, end time.Time, roomID int
 
 func (m *testDBRepo) SearchAvailabilityAllRooms(start, end time.Time) ([]models.Room, error) {
 	var rooms []models.Room
+	today := time.Now()
+	avail := time.Date(2020, time.January, 01, 0, 0, 0, 0, time.UTC)
+	if today.After(start)  {
+		return rooms, errors.New("failed to search availability")
+	}
+	if end  == avail {
+		rooms = []models.Room {
+			{
+				RoomName: "General's Quarters",
+			},
+		}
+		return rooms, nil
+
+	}
+	
 	return rooms, nil
 }
 

@@ -64,6 +64,13 @@ func (rep *Repository) Availability(w http.ResponseWriter, r *http.Request) {
 
 // PostAvailability handler for post method
 func (rep *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		rep.App.Session.Put(r.Context(), "error", "can't parse form")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
+	
 	sd := r.Form.Get("start")
 	ed := r.Form.Get("end")
 
@@ -86,7 +93,8 @@ func (rep *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) 
 	}
 	rooms, err := rep.DB.SearchAvailabilityAllRooms(startDate, endDate)
 	if err != nil {
-		helpers.ServerError(w, err)
+		rep.App.Session.Put(r.Context(), "error", "can't query database")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -159,7 +167,7 @@ func (rep *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) 
 
 		resp := jsonResponse{
 			Ok:      false,
-			Message: "Error querying database",
+			Message: "",
 		}
 
 		out, _ := json.MarshalIndent(resp, "", "     ")

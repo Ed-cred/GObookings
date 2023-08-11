@@ -354,6 +354,92 @@ func TestRepoAvailabilityJSON(t *testing.T) {
 
 }
 
+func TestRepoPostAvailability(t *testing.T) {
+	//case: No rooms are available
+	reqBody := "start=2060-08-10"
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2060-08-13")
+	req, _ := http.NewRequest("POST", "/search_availablity", strings.NewReader(reqBody))
+	ctx := getCtx(req)
+	req = req.WithContext(ctx)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(Repo.PostAvailability)
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusSeeOther {
+		t.Errorf("PostAvailablity handler returned %v for no availability, expected %v", rr.Code, http.StatusSeeOther)
+	}
+
+	//case: Cannot parse form
+	req, _ = http.NewRequest("POST", "/search_availablity", nil)
+	ctx = getCtx(req)
+	req = req.WithContext(ctx)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr = httptest.NewRecorder()
+	handler = http.HandlerFunc(Repo.PostAvailability)
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusTemporaryRedirect {
+		t.Errorf("PostAvailablity handler returned %v for no availability, expected %v", rr.Code, http.StatusTemporaryRedirect)
+	}
+	//case: Start date is in incorrect format
+	reqBody = "start=10-08-2050"
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2050-08-13")
+	req, _ = http.NewRequest("POST", "/search_availablity-json", strings.NewReader(reqBody))
+	ctx = getCtx(req)
+	req = req.WithContext(ctx)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr = httptest.NewRecorder()
+	handler = http.HandlerFunc(Repo.PostAvailability)
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusTemporaryRedirect {
+		t.Errorf("PostAvailability handler returned %v for incorrect date format, expected %v", rr.Code, http.StatusTemporaryRedirect)
+	}
+
+	//case: End date is in incorrect format
+	reqBody = "start=2050-08-10"
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=13-08-2050")
+	req, _ = http.NewRequest("POST", "/search_availablity-json", strings.NewReader(reqBody))
+	ctx = getCtx(req)
+	req = req.WithContext(ctx)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr = httptest.NewRecorder()
+	handler = http.HandlerFunc(Repo.PostAvailability)
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusTemporaryRedirect {
+		t.Errorf("PostAvailability handler returned %v for incorrect date format, expected %v", rr.Code, http.StatusTemporaryRedirect)
+	}
+	
+	//case: failed to get availability form database
+
+	reqBody = "start=2012-08-10"
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2050-08-10")
+	req, _ = http.NewRequest("POST", "/search_availablity-json", strings.NewReader(reqBody))
+	ctx = getCtx(req)
+	req = req.WithContext(ctx)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr = httptest.NewRecorder()
+	handler = http.HandlerFunc(Repo.PostAvailability)
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusTemporaryRedirect {
+		t.Errorf("PostAvailability handler returned %v for unavailable db connection, expected %v", rr.Code, http.StatusTemporaryRedirect)
+	}
+
+	//case: Room is available
+
+
+	reqBody = "start=2050-08-10"
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2020-01-01")
+	req, _ = http.NewRequest("POST", "/search_availablity-json", strings.NewReader(reqBody))
+	ctx = getCtx(req)
+	req = req.WithContext(ctx)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr = httptest.NewRecorder()
+	handler = http.HandlerFunc(Repo.PostAvailability)
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Errorf("PostAvailability handler returned %v for unavailable db connection, expected %v", rr.Code, http.StatusOK)
+	}
+}
+
 func getCtx(req *http.Request) context.Context {
 	ctx, err := session.Load(req.Context(), req.Header.Get("X-Session"))
 	if err != nil {
