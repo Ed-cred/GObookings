@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -247,6 +248,110 @@ func TestRepoPostReservation(t *testing.T) {
 	if rr.Code != http.StatusTemporaryRedirect {
 		t.Errorf("PostReservation handler returned %v for failing to insert reservation, expected %v", rr.Code, http.StatusTemporaryRedirect)
 	}
+}
+
+
+func TestRepoAvailabilityJSON(t *testing.T) {
+	//case: Rooms are not available	
+	var j jsonResponse
+	reqBody := "start=2023-08-10"
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2023-08-13")
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=1")
+	req, _ := http.NewRequest("POST", "/search_availablity-json", strings.NewReader(reqBody))
+	ctx := getCtx(req)
+	req = req.WithContext(ctx)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(Repo.AvailabilityJSON)
+	handler.ServeHTTP(rr, req)
+	err := json.Unmarshal(rr.Body.Bytes(), &j)
+	if err != nil {
+		t.Error("failed to parse JSON")
+	}
+	if j.Ok != false {
+		t.Errorf("AvailablityJSON handler returned %v for no availability, expected %v", j.Ok, false)
+	}
+
+	//case: Unable to parse form because it is missing
+	req, _ = http.NewRequest("POST", "/search_availablity-json", nil)
+	ctx = getCtx(req)
+	req = req.WithContext(ctx)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr = httptest.NewRecorder()
+	handler = http.HandlerFunc(Repo.AvailabilityJSON)
+	handler.ServeHTTP(rr, req)
+	err = json.Unmarshal(rr.Body.Bytes(), &j)
+	if err != nil {
+		t.Error("failed to parse JSON")
+	}
+	if j.Ok != false && j.Message != "Internal Server Error" {
+		t.Errorf("AvailablityJSON handler returned %v and %v for non-existant form, expected %v and Internal Server Error", j.Ok, j.Message, false)
+	}
+
+	//case: Start date is in incorrect format
+	reqBody = "start=10-08-2050"
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2050-08-13")
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=1")
+	req, _ = http.NewRequest("POST", "/search_availablity-json", strings.NewReader(reqBody))
+	ctx = getCtx(req)
+	req = req.WithContext(ctx)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr = httptest.NewRecorder()
+	handler = http.HandlerFunc(Repo.AvailabilityJSON)
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusTemporaryRedirect {
+		t.Errorf("AvailabilityJSON handler returned %v for incorrect date format, expected %v", rr.Code, http.StatusTemporaryRedirect)
+	}
+
+	//case: End date is in incorrect format
+	reqBody = "start=2050-08-10"
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=13-08-2050")
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=1")
+	req, _ = http.NewRequest("POST", "/search_availablity-json", strings.NewReader(reqBody))
+	ctx = getCtx(req)
+	req = req.WithContext(ctx)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr = httptest.NewRecorder()
+	handler = http.HandlerFunc(Repo.AvailabilityJSON)
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusTemporaryRedirect {
+		t.Errorf("AvailabilityJSON handler returned %v for incorrect date format, expected %v", rr.Code, http.StatusTemporaryRedirect)
+	}
+
+	//case: Room ID cannot be converted to an int
+	reqBody = "start=2050-08-10"
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2050-08-13")
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=invalid")
+	req, _ = http.NewRequest("POST", "/search_availablity-json", strings.NewReader(reqBody))
+	ctx = getCtx(req)
+	req = req.WithContext(ctx)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr = httptest.NewRecorder()
+	handler = http.HandlerFunc(Repo.AvailabilityJSON)
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusTemporaryRedirect {
+		t.Errorf("AvailabilityJSON handler returned %v for incorrect date format, expected %v", rr.Code, http.StatusTemporaryRedirect)
+	}	
+
+	//case: SearchAvailabilityByRoomID is not possible
+	reqBody = "start=2050-08-10"
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2050-08-13")
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=1000")
+	req, _ = http.NewRequest("POST", "/search_availablity-json", strings.NewReader(reqBody))
+	ctx = getCtx(req)
+	req = req.WithContext(ctx)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr = httptest.NewRecorder()
+	handler = http.HandlerFunc(Repo.AvailabilityJSON)
+	handler.ServeHTTP(rr, req)
+	err = json.Unmarshal(rr.Body.Bytes(), &j)
+	if err != nil {
+		t.Error("failed to parse JSON")
+	}
+	if j.Ok != false && j.Message != "Error querying database" {
+		t.Errorf("AvailablityJSON handler returned %v and %v for bad db query, expected %v and Error querying database", j.Ok, j.Message, false)
+	}
+
 }
 
 func getCtx(req *http.Request) context.Context {
