@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Ed-cred/bookings/internal/config"
@@ -14,7 +15,6 @@ import (
 	"github.com/Ed-cred/bookings/internal/render"
 	"github.com/Ed-cred/bookings/internal/repository"
 	"github.com/Ed-cred/bookings/internal/repository/dbrepo"
-	"github.com/go-chi/chi"
 )
 
 // Repository used by the handlers
@@ -305,7 +305,8 @@ func (rep *Repository) Summary(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rep *Repository) ChooseRoom(w http.ResponseWriter, r *http.Request) {
-	roomId, err := strconv.Atoi(chi.URLParam(r, "id"))
+	exploded := strings.Split(r.RequestURI, "/")
+	roomId, err := strconv.Atoi(exploded[2])
 	if err != nil {
 		rep.App.Session.Put(r.Context(), "error", "Unable to get room ID from URL")
 		http.Redirect(w, r, "/", http.StatusSeeOther)

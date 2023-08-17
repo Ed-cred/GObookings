@@ -482,7 +482,8 @@ func TestRepoSummary(t *testing.T) {
 
 func TestRepoChooseRoom(t *testing.T) {
 	//case: room id provided in incorrect format
-	req, _ := http.NewRequest("GET", "/choose_room/invalid", nil)
+	req, _ := http.NewRequest("GET", "/choose_room", nil)
+	req.RequestURI = "/choose_room/invalid"
 	ctx := getCtx(req)
 	req = req.WithContext(ctx)
 	rr := httptest.NewRecorder()
@@ -491,6 +492,34 @@ func TestRepoChooseRoom(t *testing.T) {
 	if rr.Code != http.StatusSeeOther {
 		t.Errorf("ChooseRoom handler returned %v for invalid room ID, expected %v", rr.Code, http.StatusSeeOther)
 	}
+
+	//case: no room id in session
+
+	req, _ = http.NewRequest("GET", "/choose_room", nil)
+	req.RequestURI = "/choose_room/1"
+	ctx = getCtx(req)
+	req = req.WithContext(ctx)
+	rr = httptest.NewRecorder()
+	handler = http.HandlerFunc(Repo.ChooseRoom)
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusSeeOther {
+		t.Errorf("ChooseRoom handler returned %v for invalid room ID, expected %v", rr.Code, http.StatusSeeOther)
+	}
+
+	//case: correct function call
+	var res models.Reservation
+	req, _ = http.NewRequest("GET", "/choose_room", nil)
+	req.RequestURI = "/choose_room/1"
+	ctx = getCtx(req)
+	session.Put(ctx, "reservation", res)
+	req = req.WithContext(ctx)
+	rr = httptest.NewRecorder()
+	handler = http.HandlerFunc(Repo.ChooseRoom)
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusSeeOther {
+		t.Errorf("ChooseRoom handler returned %v for invalid room ID, expected %v", rr.Code, http.StatusSeeOther)
+	}
+
 }
 
 func getCtx(req *http.Request) context.Context {
