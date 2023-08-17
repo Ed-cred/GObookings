@@ -10,7 +10,6 @@ import (
 	"github.com/Ed-cred/bookings/internal/config"
 	"github.com/Ed-cred/bookings/internal/driver"
 	"github.com/Ed-cred/bookings/internal/forms"
-	"github.com/Ed-cred/bookings/internal/helpers"
 	"github.com/Ed-cred/bookings/internal/models"
 	"github.com/Ed-cred/bookings/internal/render"
 	"github.com/Ed-cred/bookings/internal/repository"
@@ -327,7 +326,8 @@ func (rep *Repository) ChooseRoom(w http.ResponseWriter, r *http.Request) {
 func (rep *Repository) BookRoom(w http.ResponseWriter, r *http.Request) {
 	roomId, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil {
-		helpers.ServerError(w, err)
+		rep.App.Session.Put(r.Context(), "error", "Unable to get parameter from URL")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 	sd := r.URL.Query().Get("s")
@@ -337,7 +337,8 @@ func (rep *Repository) BookRoom(w http.ResponseWriter, r *http.Request) {
 	endDate, _ := time.Parse(layout, ed)
 	room, err := rep.DB.GetRoomById(roomId)
 	if err != nil {
-		helpers.ServerError(w, err)
+		rep.App.Session.Put(r.Context(), "error", "Unable to get room from database")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 	var res models.Reservation

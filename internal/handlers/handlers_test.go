@@ -27,16 +27,6 @@ var theTests = []struct {
 	{"ms", "/majors-suite", "GET", http.StatusOK},
 	{"sa", "/search_availability", "GET", http.StatusOK},
 	{"contact", "/contact", "GET", http.StatusOK},
-
-	// 	{"post_search_avail", "/search_availability", "POST", []postData{
-	// 		{key:"start", value:"01-01-2020"},
-	// 		{key:"end", value:"09-02-2020"},
-	// 	}, http.StatusOK},
-	// 	{"post_search_avai_json", "/search_availability-json", "POST", []postData{
-	// 		{key:"start", value:"01-01-2020"},
-	// 		{key:"end", value:"09-02-2020"},
-	// 	}, http.StatusOK},
-
 }
 
 func TestHandlers(t *testing.T) {
@@ -493,7 +483,7 @@ func TestRepoChooseRoom(t *testing.T) {
 		t.Errorf("ChooseRoom handler returned %v for invalid room ID, expected %v", rr.Code, http.StatusSeeOther)
 	}
 
-	//case: no room id in session
+	//case: no reservation object in session
 
 	req, _ = http.NewRequest("GET", "/choose_room", nil)
 	req.RequestURI = "/choose_room/1"
@@ -520,6 +510,39 @@ func TestRepoChooseRoom(t *testing.T) {
 		t.Errorf("ChooseRoom handler returned %v for invalid room ID, expected %v", rr.Code, http.StatusSeeOther)
 	}
 
+}
+
+func TestRepoBookRoom(t *testing.T) {
+	//case : correct url call
+	req, _ := http.NewRequest("GET", "/book_room?id=1&s=2050-01-01&e=2050-01-02", nil)
+	ctx := getCtx(req)
+	req = req.WithContext(ctx)
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(Repo.BookRoom)
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusSeeOther {
+		t.Errorf("BookRoom handler returned %v for correct query, expected %v", rr.Code, http.StatusSeeOther)
+	}	
+	//case: missing id from url
+	req, _ = http.NewRequest("GET", "/book_room?s=2050-01-01&e=2050-01-02", nil)
+	ctx = getCtx(req)
+	req = req.WithContext(ctx)
+	rr = httptest.NewRecorder()
+	handler = http.HandlerFunc(Repo.BookRoom)
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusSeeOther {
+		t.Errorf("BookRoom handler returned %v for correct query, expected %v", rr.Code, http.StatusSeeOther)
+	}
+	//case: bad database call
+	req, _ = http.NewRequest("GET", "/book_room?id=10&s=2050-01-01&e=2050-01-02", nil)
+	ctx = getCtx(req)
+	req = req.WithContext(ctx)
+	rr = httptest.NewRecorder()
+	handler = http.HandlerFunc(Repo.BookRoom)
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusSeeOther {
+		t.Errorf("BookRoom handler returned %v for correct query, expected %v", rr.Code, http.StatusSeeOther)
+	}	
 }
 
 func getCtx(req *http.Request) context.Context {
