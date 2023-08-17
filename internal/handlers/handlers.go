@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -273,6 +274,35 @@ func (rep *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
+	// send notification
+
+	htmlMessage := fmt.Sprintf(`
+		<strong>Reservation confirmation</strong><br>
+		Dear %s, <br>
+		This is a confirmation for your reservation from %s to %s for the %s room.
+	`, reservation.FirstName, reservation.StartDate.Format("2006-01-02"), reservation.EndDate.Format("2006-01-02"), reservation.Room.RoomName)
+	
+	msg := models.MailData{
+		To: reservation.Email,
+		From: "me@here.com",
+		Subject: "Reservation confirmation",
+		Content: htmlMessage,
+	}
+	rep.App.MailChan <- msg
+
+	
+	htmlMessage = fmt.Sprintf(`
+		<strong>New Reservation</strong><br>
+		A reservation has been made from %s to %s for the %s room.
+	`,reservation.StartDate.Format("2006-01-02"), reservation.EndDate.Format("2006-01-02"), reservation.Room.RoomName)
+	
+	msg = models.MailData{
+		To: "property@owner.com",
+		From: "me@here.com",
+		Subject: "New Reservation",
+		Content: htmlMessage,
+	}
+	rep.App.MailChan <- msg
 	rep.App.Session.Put(r.Context(), "reservation", reservation)
 	http.Redirect(w, r, "/reservation_summary", http.StatusSeeOther)
 }
