@@ -285,7 +285,6 @@ func (rep *Repository) About(w http.ResponseWriter, r *http.Request) {
 func (rep *Repository) Summary(w http.ResponseWriter, r *http.Request) {
 	reservation, ok := rep.App.Session.Get(r.Context(), "reservation").(models.Reservation)
 	if !ok {
-		rep.App.ErrorLog.Println("Can't get error from session")
 		rep.App.Session.Put(r.Context(), "error", "Unable to get reservation from session")
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
@@ -308,12 +307,14 @@ func (rep *Repository) Summary(w http.ResponseWriter, r *http.Request) {
 func (rep *Repository) ChooseRoom(w http.ResponseWriter, r *http.Request) {
 	roomId, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		helpers.ServerError(w, err)
+		rep.App.Session.Put(r.Context(), "error", "Unable to get room ID from URL")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 	res, ok := rep.App.Session.Get(r.Context(), "reservation").(models.Reservation)
 	if !ok {
-		helpers.ServerError(w, err)
+		rep.App.Session.Put(r.Context(), "error", "Unable to get reservation from session")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 	res.RoomID = roomId

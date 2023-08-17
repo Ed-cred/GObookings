@@ -440,6 +440,59 @@ func TestRepoPostAvailability(t *testing.T) {
 	}
 }
 
+func TestRepoSummary(t *testing.T) {
+	// case: complete reservation data is in session
+	var reservation models.Reservation
+	var sd time.Time
+	var ed time.Time
+	sd = sd.AddDate(2060, 01, 01)
+	ed = ed.AddDate(2060, 01, 02)
+	reservation = models.Reservation{
+		ID:10,       
+		RoomID:1,   
+		FirstName:"John", 
+		LastName:"Sue", 
+		Email:"john@sue.com",     
+		Phone:"076654387",     
+		StartDate: sd, 
+		EndDate: ed,    
+	}
+	req, _ := http.NewRequest("GET", "/reservation_summary", nil)
+	ctx := getCtx(req)
+	session.Put(ctx, "reservation", reservation)
+	req = req.WithContext(ctx)
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(Repo.Summary)
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Errorf("ReservationSummary handler returned %v for correct call, expected %v", rr.Code, http.StatusOK)
+	}
+
+	// case: no reservation data in session
+	req, _ = http.NewRequest("GET", "/reservation_summary", nil)
+	ctx = getCtx(req)
+	req = req.WithContext(ctx)
+	rr = httptest.NewRecorder()
+	handler = http.HandlerFunc(Repo.Summary)
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusSeeOther {
+		t.Errorf("ReservationSummary handler returned %v for missing reservation data, expected %v", rr.Code, http.StatusSeeOther)
+	}
+}
+
+func TestRepoChooseRoom(t *testing.T) {
+	//case: room id provided in incorrect format
+	req, _ := http.NewRequest("GET", "/choose_room/invalid", nil)
+	ctx := getCtx(req)
+	req = req.WithContext(ctx)
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(Repo.ChooseRoom)
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusSeeOther {
+		t.Errorf("ChooseRoom handler returned %v for invalid room ID, expected %v", rr.Code, http.StatusSeeOther)
+	}
+}
+
 func getCtx(req *http.Request) context.Context {
 	ctx, err := session.Load(req.Context(), req.Header.Get("X-Session"))
 	if err != nil {
