@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"reflect"
 	"strings"
 	"testing"
@@ -111,15 +112,24 @@ func TestRepoPostReservation(t *testing.T) {
 		EndDate: ed,
 	}
 
-	reqBody := "start_date=2050-01-01"
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "end_date=2050-01-02")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "first_name=John")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "last_name=Smith")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "email=john@smith.com")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "phone=079286573")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=1")
+	// reqBody := "start_date=2050-01-01"
+	// reqBody = fmt.Sprintf("%s&%s", reqBody, "end_date=2050-01-02")
+	// reqBody = fmt.Sprintf("%s&%s", reqBody, "first_name=John")
+	// reqBody = fmt.Sprintf("%s&%s", reqBody, "last_name=Smith")
+	// reqBody = fmt.Sprintf("%s&%s", reqBody, "email=john@smith.com")
+	// reqBody = fmt.Sprintf("%s&%s", reqBody, "phone=079286573")
+	// reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=1")
 
-	req, _ := http.NewRequest("POST", "/make_reservation", strings.NewReader(reqBody))
+	postedData := url.Values{}
+	postedData.Add("start_date", "2050-01-01")
+	postedData.Add("end_date", "2050-01-02")
+	postedData.Add("first_name", "John")
+	postedData.Add("last_name", "Smith")
+	postedData.Add("email", "john@smith.com")
+	postedData.Add("phone", "076859432")
+	postedData.Add("room_id", "1")
+
+	req, _ := http.NewRequest("POST", "/make_reservation", strings.NewReader(postedData.Encode()))
 	ctx := getCtx(req)
 	session.Put(ctx, "reservation", reservation)
 	req = req.WithContext(ctx)
@@ -145,7 +155,7 @@ func TestRepoPostReservation(t *testing.T) {
 	}
 
 	//test for missing session data
-	req, _ = http.NewRequest("POST", "/make_reservation", strings.NewReader(reqBody))
+	req, _ = http.NewRequest("POST", "/make_reservation", strings.NewReader(postedData.Encode()))
 	ctx = getCtx(req)
 	req = req.WithContext(ctx)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -183,15 +193,17 @@ func TestRepoPostReservation(t *testing.T) {
 		StartDate: sd,
 		EndDate: ed,
 	}
-	reqBody = "start_date=2050-01-01"
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "end_date=2050-01-02")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "first_name=J")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "last_name=Smith")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "email=john@smith")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "phone=079286573")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=1")
+	
+	postedData = url.Values{}
+	postedData.Add("start_date", "2050-01-01")
+	postedData.Add("end_date", "2050-01-02")
+	postedData.Add("first_name", "J")
+	postedData.Add("last_name", "Smith")
+	postedData.Add("email", "john@smith.com")
+	postedData.Add("phone", "076859432")
+	postedData.Add("room_id", "1")
 
-	req, _ = http.NewRequest("POST", "/make_reservation",strings.NewReader(reqBody))
+	req, _ = http.NewRequest("POST", "/make_reservation",strings.NewReader(postedData.Encode()))
 	ctx = getCtx(req)
 	session.Put(ctx, "reservation", reservation)
 	req = req.WithContext(ctx)
@@ -212,12 +224,13 @@ func TestRepoPostReservation(t *testing.T) {
 		RoomID: 4,
 	}
 	
-	reqBody = "first_name=Jophn"
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "last_name=Smith")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "email=john@smith.com")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "phone=079286573")
+	postedData = url.Values{}
+	postedData.Add("first_name", "John")
+	postedData.Add("last_name", "Smith")
+	postedData.Add("email", "john@smith.com")
+	postedData.Add("phone", "076859432")
 
-	req, _ = http.NewRequest("POST", "/make_reservation",strings.NewReader(reqBody))
+	req, _ = http.NewRequest("POST", "/make_reservation",strings.NewReader(postedData.Encode()))
 	ctx = getCtx(req)
 	session.Put(ctx, "reservation",res)
 	req = req.WithContext(ctx)
@@ -231,13 +244,16 @@ func TestRepoPostReservation(t *testing.T) {
 
 	//test unable to insert room restriction into db
 	reservation.RoomID = 3
-	reqBody = "first_name=Jophn"
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "last_name=Smith")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "email=john@smith.com")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "phone=079286573")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=3")
+	
+	postedData = url.Values{}
+	postedData.Add("first_name", "John")
+	postedData.Add("last_name", "Smith")
+	postedData.Add("email", "john@smith.com")
+	postedData.Add("phone", "076859432")
+	postedData.Add("room_id", "room_id=3")
 
-	req, _ = http.NewRequest("POST", "/make_reservation",strings.NewReader(reqBody))
+
+	req, _ = http.NewRequest("POST", "/make_reservation",strings.NewReader(postedData.Encode()))
 	ctx = getCtx(req)
 	session.Put(ctx, "reservation", reservation)
 	req = req.WithContext(ctx)
