@@ -7,10 +7,12 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/Ed-cred/bookings/internal/driver"
 	"github.com/Ed-cred/bookings/internal/models"
 )
 
@@ -88,6 +90,14 @@ func TestRepoReservation(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 	if rr.Code != http.StatusTemporaryRedirect {
 		t.Errorf("Reservation handler returned %v, expected %v", rr.Code, http.StatusOK)
+	}
+}
+func TestNewRepo(t *testing.T) {
+	var db driver.DB
+	testRepo := NewRepository(&app, &db)
+
+	if reflect.TypeOf(testRepo).String() != "*handlers.Repository" {
+		t.Errorf("Did not get correct type from NewRepo: got %s, wanted *Repository", reflect.TypeOf(testRepo).String())
 	}
 }
 
