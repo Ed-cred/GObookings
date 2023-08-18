@@ -410,12 +410,25 @@ func (rep *Repository) PostLogin(w http.ResponseWriter, r *http.Request) {
 	id, _, err := rep.DB.Authenticate(email, password)
 	if err != nil {
 		log.Println(err)
-		rep.App.Session.Put(r.Context(), "error","invalid login credentials")
+		rep.App.Session.Put(r.Context(), "error", "invalid login credentials")
 		http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+		return
 	}
 	rep.App.Session.Put(r.Context(), "user_id", id)
 	rep.App.Session.Put(r.Context(), "flash", "Successfully logged in")
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 
 	log.Println("works!")
+}
+
+
+func (rep *Repository) UserLogout(w http.ResponseWriter, r *http.Request) {
+	rep.App.Session.Destroy(r.Context())
+	rep.App.Session.RenewToken(r.Context())
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+
+func (rep *Repository) AdminDashboard (w http.ResponseWriter, r *http.Request) {
+	render.Template(w, "admin_dashboard.page.tmpl", r, &models.TemplateData{})
 }
