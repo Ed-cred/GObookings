@@ -400,8 +400,12 @@ func (rep *Repository) PostLogin(w http.ResponseWriter, r *http.Request) {
 	password := r.Form.Get("password")
 	form := forms.New(r.PostForm)
 	form.Required("email", "password")
+	form.IsEmail("email")
 	if !form.Valid() {
-		//TODO take user back to login page
+		render.Template(w, "login.page.tmpl", r, &models.TemplateData{
+			Form: form, 
+		})
+		return 
 	}
 	id, _, err := rep.DB.Authenticate(email, password)
 	if err != nil {
