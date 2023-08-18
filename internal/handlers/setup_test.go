@@ -43,10 +43,18 @@ func TestMain(m *testing.M) {
 	session.Cookie.SameSite = http.SameSiteLaxMode
 	session.Cookie.Secure = app.InProd
 	app.Session = session
+
+	mailChan := make(chan models.MailData)
+	app.MailChan = mailChan
+	defer close(mailChan)
+	listenForMail()
+
+
 	tc, err := CreateTestTemplateCache()
 	if err != nil {
 		log.Fatal("Could not create template cache")
 	}
+
 	app.TemplateCache = tc
 	app.UseCache = true
 	repo := NewTestRepository(&app)
@@ -81,6 +89,14 @@ func getRoutes() http.Handler {
 	mux.Handle("/static/*", http.StripPrefix("/static", fileServer))
 
 	return mux
+}
+
+func listenForMail () {
+	go func () {
+		for {
+			_ = <- app.MailChan
+		}
+	}()
 }
 
 // Nosurf adds CSRF protection to all POST requests
