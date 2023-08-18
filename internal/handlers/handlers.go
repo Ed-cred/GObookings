@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -70,7 +71,7 @@ func (rep *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) 
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
-	
+
 	sd := r.Form.Get("start")
 	ed := r.Form.Get("end")
 
@@ -281,25 +282,24 @@ func (rep *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 		Dear %s, <br>
 		This is a confirmation for your reservation from %s to %s for the %s room.
 	`, reservation.FirstName, reservation.StartDate.Format("2006-01-02"), reservation.EndDate.Format("2006-01-02"), reservation.Room.RoomName)
-	
+
 	msg := models.MailData{
-		To: reservation.Email,
-		From: "me@here.com",
-		Subject: "Reservation confirmation",
-		Content: htmlMessage,
+		To:       reservation.Email,
+		From:     "me@here.com",
+		Subject:  "Reservation confirmation",
+		Content:  htmlMessage,
 		Template: "basic.html",
 	}
 	rep.App.MailChan <- msg
 
-	
 	htmlMessage = fmt.Sprintf(`
 		<strong>New Reservation</strong><br>
 		A reservation has been made from %s to %s for the %s room.
-	`,reservation.StartDate.Format("2006-01-02"), reservation.EndDate.Format("2006-01-02"), reservation.Room.RoomName)
-	
+	`, reservation.StartDate.Format("2006-01-02"), reservation.EndDate.Format("2006-01-02"), reservation.Room.RoomName)
+
 	msg = models.MailData{
-		To: "property@owner.com",
-		From: "me@here.com",
+		To:      "property@owner.com",
+		From:    "me@here.com",
 		Subject: "New Reservation",
 		Content: htmlMessage,
 	}
@@ -385,5 +385,33 @@ func (rep *Repository) ShowLogin(w http.ResponseWriter, r *http.Request) {
 	render.Template(w, "login.page.tmpl", r, &models.TemplateData{
 		Form: forms.New(nil),
 	})
-	
+}
+
+func (rep *Repository) PostLogin(w http.ResponseWriter, r *http.Request) {
+	err := rep.App.Session.RenewToken(r.Context())
+	if err != nil {
+		panic(err)
+	}
+	err = r.ParseForm()
+	if err != nil {
+		log.Println("parsing login form error", err)
+	}
+	email := r.Form.Get("email")
+	password := r.Form.Get("password")
+	form := forms.New(r.PostForm)
+	form.Required("email", "password")
+	if !form.Valid() {
+		//TODO take user back to login page
+	}
+	id, _, err := rep.DB.Authenticate(email, password)
+	if err != nil {
+		log.Println(err)
+		rep.App.Session.Put(r.Context(), "error","invalid login credentials")
+		http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+	}
+	rep.App.Session.Put(r.Context(), "user_id", id)
+	rep.App.Session.Put(r.Context(), "flash", "Successfully logged in")
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+
+	log.Println("works!")
 }
