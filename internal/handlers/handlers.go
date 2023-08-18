@@ -380,3 +380,10 @@ func (rep *Repository) BookRoom(w http.ResponseWriter, r *http.Request) {
 	rep.App.Session.Put(r.Context(), "reservation", res)
 	http.Redirect(w, r, "make_reservation", http.StatusSeeOther)
 }
+
+func (rep *Repository) ShowLogin(w http.ResponseWriter, r *http.Request) {
+	render.Template(w, "login.page.tmpl", r, &models.TemplateData{
+		Form: forms.New(nil),
+	})
+	
+}
