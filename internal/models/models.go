@@ -34,6 +34,7 @@ type Restriction struct {
 type Reservation struct {
 	ID        int
 	RoomID    int
+	Processed int
 	FirstName string
 	LastName  string
 	Email     string

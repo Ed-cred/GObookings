@@ -181,8 +181,53 @@ func (m *postgresDbRepo) AllReservations () ([]models.Reservation, error) {
 	var reservations []models.Reservation
 
 	query := `SELECT r.id, r.first_name, r.last_name, r.email, r.phone, r.start_date, r.end_date, r.room_id, r.created_at, r.updated_at,
+	r.processed, rm.id, rm.room_name FROM reservations r
+	LEFT JOIN rooms rm ON (r.room_id = rm.id) ORDER BY r.start_date DESC`
+	rows, err := m.DB.QueryContext(ctx, query)
+	if err != nil {
+		return reservations, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var res models.Reservation
+		err := rows.Scan(
+			&res.ID,
+			&res.FirstName,
+			&res.LastName,
+			&res.Email,
+			&res.Phone,
+			&res.StartDate,
+			&res.EndDate,
+			&res.RoomID,
+			&res.CreatedAt,
+			&res.UpdatedAt,
+			&res.Processed,
+			&res.Room.ID,
+			&res.Room.RoomName,
+		)
+		if err != nil {
+			return reservations, err
+		}
+		reservations = append(reservations, res)
+	}
+	if err = rows.Err(); err != nil {
+		return reservations, err 
+	}
+
+	return reservations, nil
+
+}
+
+func (m *postgresDbRepo) AllNewReservations () ([]models.Reservation, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	var reservations []models.Reservation
+
+	query := `SELECT r.id, r.first_name, r.last_name, r.email, r.phone, r.start_date, r.end_date, r.room_id, r.created_at, r.updated_at,
 	rm.id, rm.room_name FROM reservations r
-	LEFT JOIN rooms rm ON (r.room_id = rm.id) ORDER BY r.start_date ASC`
+	LEFT JOIN rooms rm ON (r.room_id = rm.id)
+	WHERE processed = 0
+	ORDER BY r.start_date DESC`
 	rows, err := m.DB.QueryContext(ctx, query)
 	if err != nil {
 		return reservations, err

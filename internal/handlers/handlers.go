@@ -433,7 +433,19 @@ func (rep *Repository) AdminDashboard(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rep *Repository) AdminNewReservations(w http.ResponseWriter, r *http.Request) {
-	render.Template(w, "admin_new_reservations.page.tmpl", r, &models.TemplateData{})
+	newReservations, err := rep.DB.AllNewReservations()
+	if err != nil {
+		helpers.ServerError(w, err)
+		rep.App.Session.Put(r.Context(), "error", "could not fetch reservations from database")
+		// http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+		return
+	}
+	data := make(map[string]interface{})
+	data["reservations"] = newReservations
+
+	render.Template(w, "admin_new_reservations.page.tmpl", r, &models.TemplateData{
+		Data: data,
+	})
 }
 
 func (rep *Repository) AdminAllReservations(w http.ResponseWriter, r *http.Request) {
