@@ -12,6 +12,7 @@ import (
 	"github.com/Ed-cred/bookings/internal/config"
 	"github.com/Ed-cred/bookings/internal/driver"
 	"github.com/Ed-cred/bookings/internal/forms"
+	"github.com/Ed-cred/bookings/internal/helpers"
 	"github.com/Ed-cred/bookings/internal/models"
 	"github.com/Ed-cred/bookings/internal/render"
 	"github.com/Ed-cred/bookings/internal/repository"
@@ -403,9 +404,9 @@ func (rep *Repository) PostLogin(w http.ResponseWriter, r *http.Request) {
 	form.IsEmail("email")
 	if !form.Valid() {
 		render.Template(w, "login.page.tmpl", r, &models.TemplateData{
-			Form: form, 
+			Form: form,
 		})
-		return 
+		return
 	}
 	id, _, err := rep.DB.Authenticate(email, password)
 	if err != nil {
@@ -421,31 +422,36 @@ func (rep *Repository) PostLogin(w http.ResponseWriter, r *http.Request) {
 	log.Println("works!")
 }
 
-
 func (rep *Repository) UserLogout(w http.ResponseWriter, r *http.Request) {
 	rep.App.Session.Destroy(r.Context())
 	rep.App.Session.RenewToken(r.Context())
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-
-func (rep *Repository) AdminDashboard (w http.ResponseWriter, r *http.Request) {
+func (rep *Repository) AdminDashboard(w http.ResponseWriter, r *http.Request) {
 	render.Template(w, "admin_dashboard.page.tmpl", r, &models.TemplateData{})
 }
 
 func (rep *Repository) AdminNewReservations(w http.ResponseWriter, r *http.Request) {
 	render.Template(w, "admin_new_reservations.page.tmpl", r, &models.TemplateData{})
-
 }
-
 
 func (rep *Repository) AdminAllReservations(w http.ResponseWriter, r *http.Request) {
-	render.Template(w, "admin_all_reservations.page.tmpl", r, &models.TemplateData{})
+	reservations, err := rep.DB.AllReservations()
+	if err != nil {
+		helpers.ServerError(w, err)
+		rep.App.Session.Put(r.Context(), "error", "could not fetch reservations from database")
+		// http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+		return
+	}
+	data := make(map[string]interface{})
+	data["reservations"] = reservations
 
+	render.Template(w, "admin_all_reservations.page.tmpl", r, &models.TemplateData{
+		Data: data,
+	})
 }
-
 
 func (rep *Repository) AdminReservationsCalendar(w http.ResponseWriter, r *http.Request) {
 	render.Template(w, "admin_reservations_calendar.page.tmpl", r, &models.TemplateData{})
-
 }
