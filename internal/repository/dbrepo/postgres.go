@@ -290,7 +290,49 @@ func (m *postgresDbRepo) FetchReservationById(id int) (models.Reservation, error
 	if err != nil {
 		return res, err
 	}
-	
+
 
 	return res, nil
+}
+
+
+
+func (m *postgresDbRepo) UpdateReservation (r models.Reservation) (error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	query := `UPDATE users SET first_name=$1, last_name=$2, email=$3, phone=$4, updated_at=$5 
+	WHERE id = $6`
+	_, err := m.DB.ExecContext(ctx, query, 
+		r.FirstName, 
+		r.LastName, 
+		r.Email,
+		r.Phone, 
+		time.Now(),
+	)
+	if err != nil {
+		return err
+	}
+	return nil 
+}
+
+func (m *postgresDbRepo) DeleteReservation (id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	query := `DELETE FROM reservations WHERE id = $1`
+	_, err := m.DB.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *postgresDbRepo) UpdateProcessedReservation (id, processed int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	query := `UPDATE reservations SET processed=$1 WHERE id = $2`
+	_, err := m.DB.ExecContext(ctx, query, processed, id)
+	if err != nil {
+		return err
+	}
+	return nil	
 }

@@ -85,3 +85,16 @@ func (m *testDBRepo) AllNewReservations () ([]models.Reservation, error) {
 func (m *testDBRepo) FetchReservationById(id int) (models.Reservation, error) {
 	return models.Reservation{}, nil
 }
+
+
+func (m *testDBRepo) UpdateReservation (r models.Reservation) (error) {
+	return nil
+}
+
+func (m *testDBRepo) DeleteReservation (id int) error {
+	return nil
+}
+
+func (m *testDBRepo) UpdateProcessedReservation (id, processed int) error {
+	return nil
+}
