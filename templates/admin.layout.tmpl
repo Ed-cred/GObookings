@@ -15,11 +15,15 @@
         <!-- End plugin css for this page -->
         <!-- inject:css -->
         <link rel="stylesheet" href="/static/admin/css/style.css">
+        <link rel="stylesheet" type="text/css" href="https://unpkg.com/notie/dist/notie.min.css">
         <!-- endinject -->
         <link rel="shortcut icon" href="/static/admin/images/favicon.png"/>
         <style>
             label {
                 font-weight: bold;
+            }
+            .notie-container{
+                z-index: 50000;
             }
         </style>
 
@@ -131,13 +135,43 @@
 
     <!-- End plugin js for this page-->
     <!-- inject:js -->
+    <script src="https://unpkg.com/notie"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/static/admin/js/off-canvas.js"></script>
     <script src="/static/admin/js/hoverable-collapse.js"></script>
     <script src="/static/admin/js/template.js"></script>
     <!-- endinject -->
     <!-- Custom js for this page-->
+    <script src="/static/js/app.js"></script>
     <script src="/static/admin/js/dashboard.js"></script>
     <!-- End custom js for this page-->
+    <script>
+          let attention = Prompt(); 
+          
+          function notify(msgType, msgText) {
+            allowedTypes = ["success", "warning", "error","info", "force", "confirm", "input", "select", "date"]
+            if (allowedTypes.includes(msgType)) {
+              notie.alert ({
+                type: msgType,
+                text: msgText,
+                time: 3,
+              })
+            } else return
+          }
+
+          {{with .Error}}
+          notify("error", {{.}} )
+          {{end}}
+
+          {{with .Flash}}
+          notify( "success", {{.}} )
+          {{end}}
+
+          {{with .Warning}}
+          notify("warning", {{.}} )
+          {{end}}
+
+    </script>
 
     {{block "js" . }}
 

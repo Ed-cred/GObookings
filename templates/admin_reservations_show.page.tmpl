@@ -60,9 +60,8 @@
                 <hr>
                 <input type="submit" class="btn btn-primary" value="Save">
                 <a href="/admin/reservations_{{$src}}" class="btn btn-warning">Cancel</a>
+                <a href="#!" class="btn btn-info" onclick="processRes({{$res.ID}}, {{$src}})">Mark as Processed</a>
           </form>
     </div>
-  </div>
-</div>
 
 {{end}}

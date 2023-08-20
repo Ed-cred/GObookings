@@ -66,12 +66,6 @@ function Prompt() {
             c.willOpen();
           }
         },
-        preConfirm: () => {
-          return [
-            document.getElementById('start').value,
-            document.getElementById('end').value
-          ]
-        }
       })
 
       if (result) {
@@ -160,4 +154,17 @@ function PopUp(token, roomId){
         });
     })
 
+}
+
+
+function processRes(id, src) {
+  attention.custom({
+    icon: "warning",
+    msg: "Are you sure?",
+    callback: function(result) {
+      if (result !== false) {
+        window.location.href = "/admin/process_reservation/" + src + "/" + id
+      }
+    }
+  })
 }
