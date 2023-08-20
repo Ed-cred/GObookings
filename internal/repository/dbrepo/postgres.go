@@ -300,7 +300,7 @@ func (m *postgresDbRepo) FetchReservationById(id int) (models.Reservation, error
 func (m *postgresDbRepo) UpdateReservation (r models.Reservation) (error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
-	query := `UPDATE users SET first_name=$1, last_name=$2, email=$3, phone=$4, updated_at=$5 
+	query := `UPDATE reservations SET first_name=$1, last_name=$2, email=$3, phone=$4, updated_at=$5 
 	WHERE id = $6`
 	_, err := m.DB.ExecContext(ctx, query, 
 		r.FirstName, 
@@ -308,6 +308,7 @@ func (m *postgresDbRepo) UpdateReservation (r models.Reservation) (error) {
 		r.Email,
 		r.Phone, 
 		time.Now(),
+		r.ID,
 	)
 	if err != nil {
 		return err

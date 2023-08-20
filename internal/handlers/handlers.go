@@ -495,3 +495,40 @@ func (rep *Repository) AdminShowReservation (w http.ResponseWriter, r *http.Requ
 	})
 
 }
+
+
+func (rep *Repository) AdminPostReservation (w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+	exp := strings.Split(r.RequestURI, "/")
+	id, err := strconv.Atoi(exp[4])
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+	log.Println(id)
+	src := exp[3]
+	stringMap := make(map[string]string)
+	stringMap["src"] = src
+	res, err := rep.DB.FetchReservationById(id)	
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	res.FirstName = r.Form.Get("first_name")
+	res.LastName = r.Form.Get("last_name")
+	res.Email = r.Form.Get("email")
+	res.Phone = r.Form.Get("phone")
+
+	err = rep.DB.UpdateReservation(res)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+	rep.App.Session.Put(r.Context(), "flash", "Changes saved!")
+	http.Redirect(w, r, fmt.Sprintf("/admin/reservations_%s", src), http.StatusSeeOther)
+}
