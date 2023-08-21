@@ -58,10 +58,33 @@
                 </div>
 
                 <hr>
+                <div class="float-sm-start">
                 <input type="submit" class="btn btn-primary" value="Save">
                 <a href="/admin/reservations_{{$src}}" class="btn btn-warning">Cancel</a>
                 <a href="#!" class="btn btn-info" onclick="processRes({{$res.ID}}, {{$src}})">Mark as Processed</a>
+                </div>
+                <div class="float-sm-end">
+                <a href="#!" class="btn btn-danger" onclick="deleteRes({{$res.ID}})">Delete Reservation</a>
+                </div>
           </form>
     </div>
+
+{{end}}
+
+{{define "js"}}
+<script>
+{{$src := index .StringMap "src"}}
+function deleteRes(id) {
+  attention.custom({
+    icon: "warning",
+    msg: "Are you sure?",
+    callback: function(result) {
+      if (result !== false) {
+        window.location.href = "/admin/delete_reservation/" + {{$src}} + "/" + id
+      }
+    }
+  })
+}
+</script>
 
 {{end}}
