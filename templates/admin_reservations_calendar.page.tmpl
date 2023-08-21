@@ -6,12 +6,15 @@
 
 {{define "content"}}
 
-<div class="container"> 
-  <div class="row"> 
     <div class="col-md-12"> 
-      <h1>Reservation Calendar</h1>
-    </div>
-  </div>
-</div>
-
+    	<div class="text-center">
+			<h3>{{index .StringMap "this_month"}} {{index .StringMap "this_month_year"}}</h3>
+    	</div>
+		<div class="float-start">
+			<a class="btn btn-sm btn-outline-secondary" href='/admin/reservations_calendar?y={{index  .StringMap "last_month_year"}}&m={{index .StringMap "last_month"}}'>&lt;&lt;</a>
+		</div>
+		<div class = "float-end">
+			<a class="btn btn-sm btn-outline-secondary" href='/admin/reservations_calendar?y={{index .StringMap "next_month_year"}}&m={{index .StringMap "next_month"}}'>&gt;&gt;</a>
+		</div>
+		<div class="clearfix"></div>
 {{end}}

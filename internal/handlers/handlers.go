@@ -466,7 +466,42 @@ func (rep *Repository) AdminAllReservations(w http.ResponseWriter, r *http.Reque
 }
 
 func (rep *Repository) AdminReservationsCalendar(w http.ResponseWriter, r *http.Request) {
-	render.Template(w, "admin_reservations_calendar.page.tmpl", r, &models.TemplateData{})
+	//assume there is no month or year specified
+
+	now := time.Now()
+	if r.URL.Query().Get("y") != "" {
+		year, err := strconv.Atoi(r.URL.Query().Get("y"))
+		if err != nil {
+			helpers.ServerError(w, err)
+			rep.App.Session.Put(r.Context(), "error", "could not convert type string to int")
+			return
+		}
+		month, err := strconv.Atoi(r.URL.Query().Get("m"))
+		if err != nil {
+			helpers.ServerError(w, err)
+			rep.App.Session.Put(r.Context(), "error", "could not convert type string to int")
+			return
+		}
+		now = time.Date(year, time.Month(month),1, 0, 0, 0, 0, time.UTC)
+	}
+	next := now.AddDate(0, 1, 0)
+	last := now.AddDate(0, -1, 0)
+	nextMonth := next.Format("01")
+	nextMonthYear := next.Format("2006")
+	lastMonth := last.Format("01")
+	lastMonthYear := last.Format("2006")
+
+	stringMap := make(map[string]string)
+	stringMap["next_month"] = nextMonth
+	stringMap["next_month_year"] = nextMonthYear
+	stringMap["last_month"] = lastMonth
+	stringMap["last_month_year"] = lastMonthYear
+	stringMap["this_month"] = now.Format("01")
+	stringMap["this_month_year"] = now.Format("2006")
+
+	render.Template(w, "admin_reservations_calendar.page.tmpl", r, &models.TemplateData{
+		StringMap: stringMap,
+	})
 }
 
 
