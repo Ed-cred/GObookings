@@ -15,7 +15,9 @@ import (
 	"github.com/justinas/nosurf"
 )
 var functions =template.FuncMap{
-	"humanDate": FormatDate,
+	"humanDate": HumanDate,
+	"formatDate": FormatDate,
+	"iterate": IterateDays,
 }
 var app *config.AppConfig
 var pathToTemplate = "./templates"
@@ -26,9 +28,24 @@ func NewRenderer(a *config.AppConfig) {
 }
 
 //Formats time.Time dates into yyyy-mm-dd 
-func FormatDate(t time.Time) string {
+func HumanDate(t time.Time) string {
 	return t.Format("2006-01-02")
 }
+
+//Formats time.Time into any format string provided it is allowed 
+func FormatDate(t time.Time, f string) string {
+	return t.Format(f)
+}
+
+func IterateDays(count int) []int {
+	var i int 
+	var items []int
+	for i=1; i<count+1; i++ {
+		items = append(items, i)
+	}
+	return items
+}
+
 
 func AddDefaultData(td *models.TemplateData, r *http.Request) *models.TemplateData {
 	td.Flash = app.Session.PopString(r.Context(), "flash")
