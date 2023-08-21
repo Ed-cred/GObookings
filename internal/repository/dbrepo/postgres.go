@@ -120,8 +120,8 @@ func (m *postgresDbRepo) GetRoomById(id int) (models.Room, error) {
 	return room, nil
 }
 
-//Returns a models.User object containing the information from the database
-func (m *postgresDbRepo) GetUserById (id int) (models.User, error) {
+// Returns a models.User object containing the information from the database
+func (m *postgresDbRepo) GetUserById(id int) (models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	query := `SELECT first_name, last_name, email, password, access_level, created_at, updated_at
@@ -135,39 +135,38 @@ func (m *postgresDbRepo) GetUserById (id int) (models.User, error) {
 	return u, nil
 }
 
-func (m *postgresDbRepo) UpdateUser (u models.User) (error) {
+func (m *postgresDbRepo) UpdateUser(u models.User) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	query := `UPDATE users SET first_name=$1, last_name=$2, email=$3, access_level=$4, updated_at=$5 
 	WHERE id = $6`
-	_, err := m.DB.ExecContext(ctx, query, 
-		u.FirstName, 
-		u.LastName, 
-		u.Email, 
-		u.AccessLevel, 
+	_, err := m.DB.ExecContext(ctx, query,
+		u.FirstName,
+		u.LastName,
+		u.Email,
+		u.AccessLevel,
 		time.Now(),
 		u.ID,
 	)
 	if err != nil {
 		return err
 	}
-	
-	return nil 
+
+	return nil
 }
 
-// 
 func (m *postgresDbRepo) Authenticate(email, testPassword string) (int, string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
-	var id int 
+	var id int
 	var hashPass string
 	row := m.DB.QueryRowContext(ctx, "SELECT id, password FROM users WHERE email=$1", email)
 	err := row.Scan(&id, &hashPass)
 	if err != nil {
 		return 0, "", err
 	}
-	err = bcrypt.CompareHashAndPassword([]byte(hashPass),[]byte(testPassword))
-	if err == bcrypt.ErrMismatchedHashAndPassword{
+	err = bcrypt.CompareHashAndPassword([]byte(hashPass), []byte(testPassword))
+	if err == bcrypt.ErrMismatchedHashAndPassword {
 		return 0, "", errors.New("incorrect password")
 	} else if err != nil {
 		return 0, "", err
@@ -175,7 +174,7 @@ func (m *postgresDbRepo) Authenticate(email, testPassword string) (int, string, 
 	return id, hashPass, nil
 }
 
-func (m *postgresDbRepo) AllReservations () ([]models.Reservation, error) {
+func (m *postgresDbRepo) AllReservations() ([]models.Reservation, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	var reservations []models.Reservation
@@ -211,14 +210,13 @@ func (m *postgresDbRepo) AllReservations () ([]models.Reservation, error) {
 		reservations = append(reservations, res)
 	}
 	if err = rows.Err(); err != nil {
-		return reservations, err 
+		return reservations, err
 	}
 
 	return reservations, nil
-
 }
 
-func (m *postgresDbRepo) AllNewReservations () ([]models.Reservation, error) {
+func (m *postgresDbRepo) AllNewReservations() ([]models.Reservation, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	var reservations []models.Reservation
@@ -255,13 +253,11 @@ func (m *postgresDbRepo) AllNewReservations () ([]models.Reservation, error) {
 		reservations = append(reservations, res)
 	}
 	if err = rows.Err(); err != nil {
-		return reservations, err 
+		return reservations, err
 	}
 
 	return reservations, nil
-
 }
-
 
 func (m *postgresDbRepo) FetchReservationById(id int) (models.Reservation, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
@@ -286,37 +282,34 @@ func (m *postgresDbRepo) FetchReservationById(id int) (models.Reservation, error
 		&res.Processed,
 		&res.Room.ID,
 		&res.Room.RoomName,
-	)	
+	)
 	if err != nil {
 		return res, err
 	}
 
-
 	return res, nil
 }
 
-
-
-func (m *postgresDbRepo) UpdateReservation (r models.Reservation) (error) {
+func (m *postgresDbRepo) UpdateReservation(r models.Reservation) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	query := `UPDATE reservations SET first_name=$1, last_name=$2, email=$3, phone=$4, updated_at=$5 
 	WHERE id = $6`
-	_, err := m.DB.ExecContext(ctx, query, 
-		r.FirstName, 
-		r.LastName, 
+	_, err := m.DB.ExecContext(ctx, query,
+		r.FirstName,
+		r.LastName,
 		r.Email,
-		r.Phone, 
+		r.Phone,
 		time.Now(),
 		r.ID,
 	)
 	if err != nil {
 		return err
 	}
-	return nil 
+	return nil
 }
 
-func (m *postgresDbRepo) DeleteReservation (id int) error {
+func (m *postgresDbRepo) DeleteReservation(id int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	query := `DELETE FROM reservations WHERE id = $1`
@@ -327,7 +320,7 @@ func (m *postgresDbRepo) DeleteReservation (id int) error {
 	return nil
 }
 
-func (m *postgresDbRepo) UpdateProcessedReservation (id, processed int) error {
+func (m *postgresDbRepo) UpdateProcessedReservation(id, processed int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	query := `UPDATE reservations SET processed=$1 WHERE id = $2`
@@ -335,10 +328,10 @@ func (m *postgresDbRepo) UpdateProcessedReservation (id, processed int) error {
 	if err != nil {
 		return err
 	}
-	return nil	
+	return nil
 }
 
-func (m *postgresDbRepo) AllRooms () ([]models.Room, error) {
+func (m *postgresDbRepo) AllRooms() ([]models.Room, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
@@ -364,6 +357,38 @@ func (m *postgresDbRepo) AllRooms () ([]models.Room, error) {
 	}
 	if err := rows.Err(); err != nil {
 		return rooms, err
-	}		
+	}
 	return rooms, nil
+}
+
+func (m *postgresDbRepo) FetchRestrictionsForRoomByDay(id int, start, end time.Time) ([]models.RoomRestriction, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	var restrictions []models.RoomRestriction
+	query := `SELECT id, coalesce(reservation_id, 0), restriction_id, room_id, start_date, end_date FROM room_restrictions 
+	WHERE $1 < end_date AND $2 >= start_date AND room_id = $3`
+	rows, err := m.DB.QueryContext(ctx, query, start, end, id)
+	if err != nil {
+		return restrictions, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var r models.RoomRestriction
+		err := rows.Scan(
+			&r.ID, 
+			&r.ReservationID,
+			&r.RestricitonID,
+			&r.RoomID,
+			&r.StartDate,
+			&r.EndDate,
+		)
+		if err != nil {
+			return restrictions, err
+		}
+		restrictions = append(restrictions, r)
+	}
+	if err = rows.Err(); err != nil {
+		return restrictions, err
+	}
+	return restrictions, nil
 }

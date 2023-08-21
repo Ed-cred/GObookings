@@ -102,3 +102,7 @@ func (m *testDBRepo) UpdateProcessedReservation (id, processed int) error {
 func (m *testDBRepo) AllRooms () ([]models.Room, error) {
 	return []models.Room{}, nil
 }
+
+func (m *testDBRepo) FetchRestrictionsForRoomByDay(id int, start, end time.Time) ([]models.RoomRestriction, error) {
+	return []models.RoomRestriction{}, nil
+}
