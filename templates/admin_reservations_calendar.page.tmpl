@@ -22,6 +22,8 @@
 				<a class="btn btn-sm btn-outline-secondary" href='/admin/reservations_calendar?y={{index .StringMap "next_month_year"}}&m={{index .StringMap "next_month"}}'>&gt;&gt;</a>
 			</div>
 		</div>
+		<form method="post" action="/admin/reservations_calendar">
+		<input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
 		{{range $rooms}}
 
 			{{$roomId := .ID }}
@@ -61,5 +63,8 @@
 				</table>
 			</div>
 		{{end}}
+		<hr>
+		<input type="submit" class="btn btn-primary" value="Save Changes">
+		</form>
 	</div>
 {{end}}

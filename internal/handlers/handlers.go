@@ -648,3 +648,7 @@ func (rep *Repository) AdminDeleteReservation (w http.ResponseWriter, r *http.Re
 	rep.App.Session.Put(r.Context(), "flash", "Reservation has been deleted!")
 	http.Redirect(w, r, fmt.Sprintf("/admin/reservations_%s", src), http.StatusSeeOther)
 }
+
+func (rep *Repository) AdminPostReservationsCalendar (w http.ResponseWriter, r *http.Request) {
+	log.Println("works")
+}
