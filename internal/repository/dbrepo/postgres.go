@@ -52,7 +52,7 @@ func (m *postgresDbRepo) InsertRoomRestriction(r models.RoomRestriction) error {
 		r.EndDate,
 		r.RoomID,
 		r.ReservationID,
-		r.RestricitonID,
+		r.RestrictionID,
 		time.Now(),
 		time.Now(),
 	)
@@ -365,7 +365,8 @@ func (m *postgresDbRepo) FetchRestrictionsForRoomByDay(id int, start, end time.T
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	var restrictions []models.RoomRestriction
-	query := `SELECT id, coalesce(reservation_id, 0), restriction_id, room_id, start_date, end_date FROM room_restrictions 
+	query := `SELECT id, coalesce(reservation_id, 0), restriction_id, room_id, start_date, end_date 
+	FROM room_restrictions 
 	WHERE $1 < end_date AND $2 >= start_date AND room_id = $3`
 	rows, err := m.DB.QueryContext(ctx, query, start, end, id)
 	if err != nil {
@@ -377,7 +378,7 @@ func (m *postgresDbRepo) FetchRestrictionsForRoomByDay(id int, start, end time.T
 		err := rows.Scan(
 			&r.ID, 
 			&r.ReservationID,
-			&r.RestricitonID,
+			&r.RestrictionID,
 			&r.RoomID,
 			&r.StartDate,
 			&r.EndDate,

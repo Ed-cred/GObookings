@@ -38,8 +38,6 @@ func main() {
 	fmt.Println("Starting email listener...")
 	listenForMail()
 
-
-
 	fmt.Printf("Starting up app on port %v\n", portNumber)
 	srv := &http.Server{
 		Addr:    portNumber,
@@ -84,8 +82,10 @@ func run() (*driver.DB, error) {
 
 	tc, err := render.CreateTemplateCache()
 	if err != nil {
-		log.Fatal("Could not create template cache")
+		log.Fatal(err)
 		return nil, err
+		
+		
 	}
 	app.TemplateCache = tc
 	app.UseCache = false

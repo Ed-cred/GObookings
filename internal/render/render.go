@@ -36,6 +36,9 @@ func HumanDate(t time.Time) string {
 func FormatDate(t time.Time, f string) string {
 	return t.Format(f)
 }
+func Add (a, b int) int {
+	return a + b
+} 
 
 func IterateDays(count int) []int {
 	var i int 

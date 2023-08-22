@@ -23,7 +23,10 @@
 			</div>
 		</div>
 		{{range $rooms}}
+
 			{{$roomId := .ID }}
+			{{$blocks := index $.Data (printf "block_map_%d" .ID)}}
+			{{$reservations := index $.Data (printf "reservation_map_%d" .ID)}}
 			<h4 class="mt-4">{{.RoomName}}</h4>
 			<div class = "table-responsive">
 				<table class = "table table-bordered table-sm">
@@ -38,7 +41,20 @@
 					<tr>
 						{{range $index := iterate $dim}}
 						<td class="text-center">
-							<input type="checkbox">
+							{{if (gt (index $reservations (printf "%s-%s-%d" $currYear $currMonth $index)) 0) }}
+								<a href='/admin/reservations/cal/{{index $reservations (printf "%s-%s-%d" $currYear $currMonth $index)}}'>
+									<span class="text-danger">R</span>
+							{{else}}
+							<input type='checkbox'
+								{{if (gt (index $blocks (printf "%s-%s-%d" $currYear $currMonth $index)) 0)}}
+									checked
+									name='remove_block_{{$roomId}}_{{printf "%s-%s-%d" $currYear $currMonth $index}}'
+									value='{{index $blocks (printf "%s-%s-%d" $currYear $currMonth $index)}}'
+								{{else}}
+									name='add_block_{{$roomId}}_{{printf "%s-%s-%d" $currYear $currMonth $index}}'
+								{{end}}
+							 >
+							{{end}}
 						</td>
 						{{end}}
 					</tr>
