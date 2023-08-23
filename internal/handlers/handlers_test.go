@@ -609,11 +609,11 @@ func TestRepoLogin(t *testing.T) {
 	}
 }
 
-func TestRepoProcessReservation(t *testing.T) {
+func TestRepoAdminProcessReservation(t *testing.T) {
 	// case: coming from a page that does not need time data aka new_res or all_res
 	src := "new"
 	id := 10
-	req, _ := http.NewRequest("GET", fmt.Sprintf("/process_reservation/%s/%d/do", src, id), nil)
+	req, _ := http.NewRequest("GET", fmt.Sprintf("/admin/process_reservation/%s/%d/do", src, id), nil)
 	expLocation := fmt.Sprintf("/admin/reservations_%s", src)
 	ctx := getCtx(req)
 	req = req.WithContext(ctx)
@@ -629,9 +629,9 @@ func TestRepoProcessReservation(t *testing.T) {
 	src = "cal"
 	id = 13
 	year := "2023"
-	month := "08" 
+	month := "08"
 
-	req, _ = http.NewRequest("GET", fmt.Sprintf("/user/login/%s/%d/do?y=%s&m=%s", src, id, year, month), nil)
+	req, _ = http.NewRequest("GET", fmt.Sprintf("/admin/process_reservation/%s/%d/do?y=%s&m=%s", src, id, year, month), nil)
 	expLocation = fmt.Sprintf("/admin/reservations_calendar?y=%s&m=%s", year, month)
 	ctx = getCtx(req)
 	req = req.WithContext(ctx)
@@ -643,6 +643,93 @@ func TestRepoProcessReservation(t *testing.T) {
 		t.Errorf("Failed ProcessReservation: returned %v and %s, expected %v and %s", rr.Code, location.String(), http.StatusSeeOther, expLocation)
 	}
 }
+
+func TestRepoAdminDeleteReservation(t *testing.T) {
+	// case: coming from a page that does not need time data aka new_res or all_res
+	src := "all"
+	id := 10
+	req, _ := http.NewRequest("GET", fmt.Sprintf(".admin/delete_reservation/%s/%d/do", src, id), nil)
+	expLocation := fmt.Sprintf("/admin/reservations_%s", src)
+	ctx := getCtx(req)
+	req = req.WithContext(ctx)
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(Repo.AdminDeleteReservation)
+	handler.ServeHTTP(rr, req)
+	location, _ := rr.Result().Location()
+	if rr.Code != http.StatusSeeOther && expLocation != location.String() {
+		t.Errorf("Failed ProcessReservation: returned %v and %s, expected %v and %s", rr.Code, location.String(), http.StatusSeeOther, expLocation)
+	}
+
+	// case: coming from calendar page
+	src = "cal"
+	id = 13
+	year := "2023"
+	month := "08"
+
+	req, _ = http.NewRequest("GET", fmt.Sprintf("/admin/delete_reservation/%s/%d/do?y=%s&m=%s", src, id, year, month), nil)
+	expLocation = fmt.Sprintf("/admin/reservations_calendar?y=%s&m=%s", year, month)
+	ctx = getCtx(req)
+	req = req.WithContext(ctx)
+	rr = httptest.NewRecorder()
+	handler = http.HandlerFunc(Repo.AdminDeleteReservation)
+	handler.ServeHTTP(rr, req)
+	location, _ = rr.Result().Location()
+	if rr.Code != http.StatusSeeOther && expLocation != location.String() {
+		t.Errorf("Failed ProcessReservation: returned %v and %s, expected %v and %s", rr.Code, location.String(), http.StatusSeeOther, expLocation)
+	}
+}
+
+func TestRepoAdminPostReservation(t *testing.T) {
+	// case : coming form a page that does not need the date aka all_res in this case
+	src := "all"
+	id := 13
+	postedData := url.Values{}
+	postedData.Add("first_name", "John")
+	postedData.Add("last_name", "Smith")
+	postedData.Add("email", "john@smith.com")
+	postedData.Add("phone", "076859432")
+
+	expLocation := fmt.Sprintf("/admin/reservations_%s", src)
+
+	req, _ := http.NewRequest("POST", fmt.Sprintf("/admin/reservations/%s/%d", src, id), strings.NewReader(postedData.Encode()))
+	ctx := getCtx(req)
+	req = req.WithContext(ctx)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr := httptest.NewRecorder()
+	location, _ := rr.Result().Location()
+	handler := http.HandlerFunc(Repo.AdminPostReservation)
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusSeeOther && expLocation != location.String() {
+		t.Errorf("Failed AdminPostReservation: returned %v and %s, expected %v and %s", rr.Code, location.String(), http.StatusSeeOther, expLocation)
+	}
+
+	// case : coming from calendar page
+	year := "2023"
+	month := "08"
+	postedData = url.Values{}
+	postedData.Add("first_name", "John")
+	postedData.Add("last_name", "Smith")
+	postedData.Add("email", "john@smith.com")
+	postedData.Add("phone", "076859432")
+	postedData.Add("year", year)
+	postedData.Add("month", month)
+
+	expLocation = fmt.Sprintf("/admin/reservations_calendar?y=%s&m=%s", year, month)
+
+	req, _ = http.NewRequest("POST", fmt.Sprintf("/admin/reservations/%s/%d", src, id), strings.NewReader(postedData.Encode()))
+	ctx = getCtx(req)
+	req = req.WithContext(ctx)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr = httptest.NewRecorder()
+	location, _ = rr.Result().Location()
+	handler = http.HandlerFunc(Repo.AdminPostReservation)
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusSeeOther && expLocation != location.String() {
+		t.Errorf("Failed AdminPostReservation: returned %v and %s, expected %v and %s", rr.Code, location.String(), http.StatusSeeOther, expLocation)
+	}
+}
+
+
 
 func getCtx(req *http.Request) context.Context {
 	ctx, err := session.Load(req.Context(), req.Header.Get("X-Session"))

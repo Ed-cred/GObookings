@@ -591,7 +591,9 @@ func (rep *Repository) AdminPostReservation(w http.ResponseWriter, r *http.Reque
 		helpers.ServerError(w, err)
 		return
 	}
-	exp := strings.Split(r.RequestURI, "/")
+	year := r.Form.Get("year")
+	month := r.Form.Get("month")
+	exp := strings.Split(r.URL.String(), "/")
 	id, err := strconv.Atoi(exp[4])
 	if err != nil {
 		helpers.ServerError(w, err)
@@ -617,8 +619,6 @@ func (rep *Repository) AdminPostReservation(w http.ResponseWriter, r *http.Reque
 		helpers.ServerError(w, err)
 		return
 	}
-	year := r.Form.Get("year")
-	month := r.Form.Get("month")
 
 	rep.App.Session.Put(r.Context(), "flash", "Changes saved!")
 	if year == "" || month == "" {
