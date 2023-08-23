@@ -106,3 +106,11 @@ func (m *testDBRepo) AllRooms () ([]models.Room, error) {
 func (m *testDBRepo) FetchRestrictionsForRoomByDay(id int, start, end time.Time) ([]models.RoomRestriction, error) {
 	return []models.RoomRestriction{}, nil
 }
+func (m *testDBRepo) InsertBlockForRoom(id int, start time.Time) error {
+	return nil
+}
+
+
+func (m *testDBRepo) DeleteBlockById (id int) error {
+	return nil
+}
