@@ -548,7 +548,7 @@ func (rep *Repository) AdminReservationsCalendar(w http.ResponseWriter, r *http.
 		data[fmt.Sprintf("reservation_map_%d", x.ID)] = resMap
 		data[fmt.Sprintf("block_map_%d", x.ID)] = blockMap
 
-		rep.App.Session.Put(r.Context(), fmt.Sprintf("block-map-%d", x.ID), blockMap )
+		rep.App.Session.Put(r.Context(), fmt.Sprintf("block_map_%d", x.ID), blockMap )
 
 	}
 	render.Template(w, "admin_reservations_calendar.page.tmpl", r, &models.TemplateData{
@@ -657,6 +657,44 @@ func (rep *Repository) AdminPostReservationsCalendar (w http.ResponseWriter, r *
 	}
 	year, _ := strconv.Atoi(r.Form.Get("y"))
 	month, _ := strconv.Atoi(r.Form.Get("m"))
+
+	//process calendar blocks
+	rooms, err := rep.DB.AllRooms()
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+	form := forms.New(r.PostForm)
+	for _, x := range rooms {
+		//If we have an entry in the map that does not exist in the posted data
+		//And restricton_id > 0, then we know it is a block we need to remove
+		currMap := rep.App.Session.Get(r.Context(), fmt.Sprintf("block_map_%d", x.ID)).(map[string]int)
+		for name, value := range currMap {
+			if val, ok := currMap[name]; ok {
+				// if ok is indeed true, we only need to look at values > 0
+				// that are not in the form post data
+				if val > 0{
+					if !form.Has(fmt.Sprintf("remove_block_%d_%s", x.ID, name)) {
+					log.Println("Identified unchecked block that would be removed: ", value)
+					}
+				}
+
+			}
+		}
+	}
+	//Handle newly checked blocks
+	for name := range r.PostForm {
+		if strings.HasPrefix(name,"add_block"){
+			exp := strings.Split(name, "_")
+			roomId, err := strconv.Atoi(exp[2])
+			if err != nil {
+				helpers.ServerError(w, err)
+				return
+			}
+			log.Println("would insert block for room id:", roomId, "for date", exp[3])
+		}
+		log.Println("form has name: ", name)
+	}
 
 
 	rep.App.Session.Put(r.Context(), "flash", "Changes saved!")
