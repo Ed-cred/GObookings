@@ -471,13 +471,11 @@ func (rep *Repository) AdminReservationsCalendar(w http.ResponseWriter, r *http.
 		year, err := strconv.Atoi(r.URL.Query().Get("y"))
 		if err != nil {
 			helpers.ServerError(w, err)
-			rep.App.Session.Put(r.Context(), "error", "could not convert type string to int")
 			return
 		}
 		month, err := strconv.Atoi(r.URL.Query().Get("m"))
 		if err != nil {
 			helpers.ServerError(w, err)
-			rep.App.Session.Put(r.Context(), "error", "could not convert type string to int")
 			return
 		}
 		now = time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)

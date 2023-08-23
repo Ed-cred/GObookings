@@ -37,6 +37,8 @@ var theTests = []struct {
 	{"new_res", "/admin/reservations_new", "GET", http.StatusOK},
 	{"all_res", "/admin/reservations_all", "GET", http.StatusOK},
 	{"show_res", "/admin/reservations/new/10/show", "GET", http.StatusOK},
+	{"show_res_cal", "/admin/reservations_calendar", "GET", http.StatusOK},
+	{"show_res_cal_with_params", "/admin/reservations_calendar?y=2020&m=1", "GET", http.StatusOK},
 }
 
 func TestHandlers(t *testing.T) {
@@ -648,7 +650,7 @@ func TestRepoAdminDeleteReservation(t *testing.T) {
 	// case: coming from a page that does not need time data aka new_res or all_res
 	src := "all"
 	id := 10
-	req, _ := http.NewRequest("GET", fmt.Sprintf(".admin/delete_reservation/%s/%d/do", src, id), nil)
+	req, _ := http.NewRequest("GET", fmt.Sprintf("/admin/delete_reservation/%s/%d/do", src, id), nil)
 	expLocation := fmt.Sprintf("/admin/reservations_%s", src)
 	ctx := getCtx(req)
 	req = req.WithContext(ctx)
@@ -729,7 +731,87 @@ func TestRepoAdminPostReservation(t *testing.T) {
 	}
 }
 
+var adminPostCalendarTests = []struct {
+	name          string
+	postedData    url.Values
+	expStatusCode int
+	blocks        int
+	reservations  int
+}{
+	{
+		name: "cal",
+		postedData: url.Values {
+			"year": {time.Now().Format("2006")},
+			"month": {time.Now().Format("01")},
+			fmt.Sprintf("add_block_1_%s", time.Now().AddDate(0, 0, 1).Format("2006-01-2")): {"1"},
+		},
+		expStatusCode: http.StatusSeeOther,
+	},
+	{
+		name: "cal_block",
+		postedData: url.Values {},
+		expStatusCode: http.StatusSeeOther,
+		blocks: 1,
 
+	},
+	{
+		name: "cal_res",
+		postedData: url.Values {},
+		expStatusCode: http.StatusSeeOther,
+		reservations: 1,
+		
+	},
+}
+
+func TestRepoAdminPostCalendar(t *testing.T) {
+	for _, e := range adminPostCalendarTests {
+		var req *http.Request
+		if e.postedData != nil {
+			req, _ = http.NewRequest("POST", "/admin/reservations_calendar", strings.NewReader(e.postedData.Encode()))
+		} else {
+			req, _ = http.NewRequest("POST", "/admin/reservations_calendar", nil)
+		}
+		ctx := getCtx(req)
+		req = req.WithContext(ctx)
+		now := time.Now()
+		bm := make(map[string]int)
+		rm := make(map[string]int)
+		currentYear, currentMonth, _ := now.Date()
+		currentLocation := now.Location()
+
+		firstOfMonth := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, currentLocation)
+		lastOfMonth := firstOfMonth.AddDate(0, 1, -1)
+
+		for d := firstOfMonth; d.After(lastOfMonth) == false; d = d.AddDate(0, 0, 1) {
+			rm[d.Format("2006-01-2")] = 0
+			bm[d.Format("2006-01-2")] = 0
+		}
+
+		if e.blocks > 0 {
+			bm[firstOfMonth.Format("2006-01-2")] = e.blocks
+		}
+
+		if e.reservations > 0 {
+			rm[lastOfMonth.Format("2006-01-2")] = e.reservations
+		}
+
+		session.Put(ctx, "block_map_1", bm)
+		session.Put(ctx, "reservation_map_1", rm)
+
+		// set the header
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		rr := httptest.NewRecorder()
+
+		// call the handler
+		handler := http.HandlerFunc(Repo.AdminPostReservationsCalendar)
+		handler.ServeHTTP(rr, req)
+
+		if rr.Code != e.expStatusCode {
+			t.Errorf("failed %s: expected code %d, but got %d", e.name, e.expStatusCode, rr.Code)
+		}
+
+	}
+}
 
 func getCtx(req *http.Request) context.Context {
 	ctx, err := session.Load(req.Context(), req.Header.Get("X-Session"))
