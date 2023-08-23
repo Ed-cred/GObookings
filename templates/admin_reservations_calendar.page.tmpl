@@ -46,7 +46,7 @@
 						{{range $index := iterate $dim}}
 						<td class="text-center">
 							{{if (gt (index $reservations (printf "%s-%s-%d" $currYear $currMonth $index)) 0) }}
-								<a href='/admin/reservations/cal/{{index $reservations (printf "%s-%s-%d" $currYear $currMonth $index)}}'>
+								<a href='/admin/reservations/cal/{{index $reservations (printf "%s-%s-%d" $currYear $currMonth $index)}}/show?y={{$currYear}}&m={{$currMonth}}'>
 									<span class="text-danger">R</span>
 							{{else}}
 							<input type='checkbox'
