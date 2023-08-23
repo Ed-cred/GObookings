@@ -438,7 +438,6 @@ func (rep *Repository) AdminNewReservations(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		helpers.ServerError(w, err)
 		rep.App.Session.Put(r.Context(), "error", "could not fetch reservations from database")
-		// http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 		return
 	}
 	data := make(map[string]interface{})
@@ -454,7 +453,6 @@ func (rep *Repository) AdminAllReservations(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		helpers.ServerError(w, err)
 		rep.App.Session.Put(r.Context(), "error", "could not fetch reservations from database")
-		// http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 		return
 	}
 	data := make(map[string]interface{})
