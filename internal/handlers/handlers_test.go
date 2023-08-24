@@ -115,8 +115,8 @@ func TestNewRepo(t *testing.T) {
 func TestRepoPostReservation(t *testing.T) {
 	var sd time.Time
 	var ed time.Time
-	sd = sd.AddDate(2060, 0o1, 0o1)
-	ed = ed.AddDate(2060, 0o1, 0o2)
+	sd = sd.AddDate(2060, 01, 01)
+	ed = ed.AddDate(2060, 01, 02)
 	reservation := models.Reservation{
 		StartDate: sd,
 		EndDate:   ed,
@@ -169,7 +169,7 @@ func TestRepoPostReservation(t *testing.T) {
 	}
 
 	// test for wrong start date and end date format
-	sd = sd.AddDate(0o10, 0o23, 11)
+	sd = sd.AddDate(010, 023, 11)
 	ed = ed.AddDate(210, 123, 123)
 	reservation = models.Reservation{
 		StartDate: sd,
@@ -189,8 +189,8 @@ func TestRepoPostReservation(t *testing.T) {
 	}
 
 	// test for invalid data
-	sd = sd.AddDate(2060, 0o1, 0o1)
-	ed = ed.AddDate(2060, 0o1, 0o2)
+	sd = sd.AddDate(2060, 01, 01)
+	ed = ed.AddDate(2060, 01, 02)
 	reservation = models.Reservation{
 		StartDate: sd,
 		EndDate:   ed,
@@ -213,13 +213,13 @@ func TestRepoPostReservation(t *testing.T) {
 	rr = httptest.NewRecorder()
 	handler = http.HandlerFunc(Repo.PostReservation)
 	handler.ServeHTTP(rr, req)
-	if rr.Code != http.StatusSeeOther {
-		t.Errorf("PostReservation handler returned %v for invalid form data, expected %v", rr.Code, http.StatusSeeOther)
+	if rr.Code != http.StatusOK {
+		t.Errorf("PostReservation handler returned %v for invalid form data, expected %v", rr.Code, http.StatusOK)
 	}
 
 	// test unable to insert reservation into db
-	sdr := sd.AddDate(2070, 0o1, 0o1)
-	edr := ed.AddDate(2070, 0o1, 0o2)
+	sdr := sd.AddDate(2070, 01, 01)
+	edr := ed.AddDate(2070, 01, 02)
 	res := models.Reservation{
 		StartDate: sdr,
 		EndDate:   edr,
@@ -681,53 +681,57 @@ func TestRepoAdminDeleteReservation(t *testing.T) {
 	}
 }
 
+var adminPostReservationTests = []struct {
+	name          string
+	pageSrc       string
+	resID         int
+	postData      url.Values
+	expStatusCode int
+	expLocation   string
+}{
+	{
+		name:    "post_from_all_res",
+		pageSrc: "all",
+		resID:   13,
+		postData: url.Values{
+			"first_name": {"John"},
+			"last_name":  {"Smith"},
+			"email":      {"john@example.com"},
+			"phone":      {"555-555-5555"},
+		},
+		expStatusCode: http.StatusSeeOther,
+		expLocation:   fmt.Sprintf("/admin/reservations_%s", "all"),
+	},
+	{
+		name:    "post_from_cal",
+		pageSrc: "cal",
+		resID:   13,
+		postData: url.Values{
+			"first_name": {"John"},
+			"last_name":  {"Smith"},
+			"email":      {"john@example.com"},
+			"phone":      {"555-555-5555"},
+			"year":       {"2023"},
+			"month":      {"08"},
+		},
+		expStatusCode: http.StatusSeeOther,
+		expLocation:   fmt.Sprintf("/admin/reservations_calendar?y=%s&m=%s", "2023", "08"),
+	},
+}
+
 func TestRepoAdminPostReservation(t *testing.T) {
-	// case : coming form a page that does not need the date aka all_res in this case
-	src := "all"
-	id := 13
-	postedData := url.Values{}
-	postedData.Add("first_name", "John")
-	postedData.Add("last_name", "Smith")
-	postedData.Add("email", "john@smith.com")
-	postedData.Add("phone", "076859432")
-
-	expLocation := fmt.Sprintf("/admin/reservations_%s", src)
-
-	req, _ := http.NewRequest("POST", fmt.Sprintf("/admin/reservations/%s/%d", src, id), strings.NewReader(postedData.Encode()))
-	ctx := getCtx(req)
-	req = req.WithContext(ctx)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	rr := httptest.NewRecorder()
-	location, _ := rr.Result().Location()
-	handler := http.HandlerFunc(Repo.AdminPostReservation)
-	handler.ServeHTTP(rr, req)
-	if rr.Code != http.StatusSeeOther && expLocation != location.String() {
-		t.Errorf("Failed AdminPostReservation: returned %v and %s, expected %v and %s", rr.Code, location.String(), http.StatusSeeOther, expLocation)
-	}
-
-	// case : coming from calendar page
-	year := "2023"
-	month := "08"
-	postedData = url.Values{}
-	postedData.Add("first_name", "John")
-	postedData.Add("last_name", "Smith")
-	postedData.Add("email", "john@smith.com")
-	postedData.Add("phone", "076859432")
-	postedData.Add("year", year)
-	postedData.Add("month", month)
-
-	expLocation = fmt.Sprintf("/admin/reservations_calendar?y=%s&m=%s", year, month)
-
-	req, _ = http.NewRequest("POST", fmt.Sprintf("/admin/reservations/%s/%d", src, id), strings.NewReader(postedData.Encode()))
-	ctx = getCtx(req)
-	req = req.WithContext(ctx)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	rr = httptest.NewRecorder()
-	location, _ = rr.Result().Location()
-	handler = http.HandlerFunc(Repo.AdminPostReservation)
-	handler.ServeHTTP(rr, req)
-	if rr.Code != http.StatusSeeOther && expLocation != location.String() {
-		t.Errorf("Failed AdminPostReservation: returned %v and %s, expected %v and %s", rr.Code, location.String(), http.StatusSeeOther, expLocation)
+	for _, e := range adminPostReservationTests {
+		req, _ := http.NewRequest("POST", fmt.Sprintf("/admin/reservations/%s/%d", e.pageSrc, e.resID), strings.NewReader(e.postData.Encode()))
+		ctx := getCtx(req)
+		req = req.WithContext(ctx)
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		rr := httptest.NewRecorder()
+		location, _ := rr.Result().Location()
+		handler := http.HandlerFunc(Repo.AdminPostReservation)
+		handler.ServeHTTP(rr, req)
+		if rr.Code != e.expStatusCode && e.expLocation != location.String() {
+			t.Errorf("Failed %s: returned %v and %s, expected %v and %s", e.name, rr.Code, location.String(), e.expStatusCode, e.expLocation)
+		}
 	}
 }
 
@@ -740,26 +744,24 @@ var adminPostCalendarTests = []struct {
 }{
 	{
 		name: "cal",
-		postedData: url.Values {
-			"year": {time.Now().Format("2006")},
+		postedData: url.Values{
+			"year":  {time.Now().Format("2006")},
 			"month": {time.Now().Format("01")},
 			fmt.Sprintf("add_block_1_%s", time.Now().AddDate(0, 0, 1).Format("2006-01-2")): {"1"},
 		},
 		expStatusCode: http.StatusSeeOther,
 	},
 	{
-		name: "cal_block",
-		postedData: url.Values {},
+		name:          "cal_block",
+		postedData:    url.Values{},
 		expStatusCode: http.StatusSeeOther,
-		blocks: 1,
-
+		blocks:        1,
 	},
 	{
-		name: "cal_res",
-		postedData: url.Values {},
+		name:          "cal_res",
+		postedData:    url.Values{},
 		expStatusCode: http.StatusSeeOther,
-		reservations: 1,
-		
+		reservations:  1,
 	},
 }
 
