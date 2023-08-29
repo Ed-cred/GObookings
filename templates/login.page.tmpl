@@ -4,8 +4,8 @@
 
 <div class="container"> 
   <div class="row"> 
-    <div class="col"> 
-      <h1>Log in</h1>
+    <div class="col-md-8 offset-2"> 
+      <h1 class="mt-4">Log in</h1>
       <form method="post" action='/user/login' novalidate>
         <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
         <div class= "form-group mt-3">
@@ -25,7 +25,7 @@
             id="password" name="password" required  autocomplete="off" >
         </div>            
         <hr>
-        <input type="submit" class="btn btn-primary" value="Submit">
+        <input type="submit" class="btn btn-primary mb-4" value="Submit">
       </form>
     </div>
   </div>
